@@ -1,17 +1,7 @@
 import numpy as np
 import random
 from delivery_action import DeliveryAction
-
-
-class Colors:
-    # Blue-ish BG, black FG
-    PLAYER = '\u001b[48;2;40;180;255;38;2;0;0;0m'
-    # Yellowish BG, black FG
-    PICKUP = '\u001b[48;2;200;200;0;38;2;0;0;0m'
-    # Dark green BG, black FG
-    DROPOFF = '\u001b[48;2;0;200;0;38;2;0;0;0m'
-
-    RESET = '\u001b[0m'
+from colors import Colors
 
 class DeliveryState:
     '''
@@ -33,7 +23,7 @@ class DeliveryState:
         # Player coordinates
         self.player = np.array([2, 0], dtype=self.dtype)
         # Package Pickup Locations
-        self.pickups = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+        self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
         # Current Package Locations, value indicates num packages.
         self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
         # Package Dropoff Locations
@@ -47,7 +37,7 @@ class DeliveryState:
         # self.pickups
         # print(space)
 
-        self.pickups[4,2] = 1
+        self.spawners[4,2] = 1
         self.dropoffs[1, 3] = 1
         self.dropoffs[0, 0] = 1
 
@@ -55,7 +45,7 @@ class DeliveryState:
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
         # That way the returned array can be part of an observation space defined
         # based on what is returned here.
-        return (self.player, self.pickups, self.packages, self.dropoffs)
+        return (self.player, self.spawners, self.packages, self.dropoffs)
 
     def render(self):
         for y in range(self.y_lim):
@@ -67,7 +57,7 @@ class DeliveryState:
                     # 38: set color (next args define color)
                     # 48: set bg color
                     ch += Colors.PLAYER#Colors.BG_BRIGHT_RED + '\u001b[38;5;232m' #Colors.BLACK
-                elif self.pickups[x, y] > 0:
+                elif self.spawners[x, y] > 0:
                     ch += Colors.PICKUP#Colors.BG_MAGENTA
                 elif self.dropoffs[x, y] > 0:
                     ch += Colors.DROPOFF#Colors.BG_BLUE
@@ -112,6 +102,10 @@ class DeliveryState:
         self.player[1] = pos[1]
 
     def step(self, action):
+        reward = 0
+    
+
+        # === Handle Agent Action ===
         action_name = DeliveryAction(action).name
         arr = action_name.split('_')
         act = arr[0]
@@ -121,8 +115,18 @@ class DeliveryState:
             self.move(pos)
         #print(act, direction)
 
+
+        # === Spawn Packages ===
+        package_spawn_chance = 0.5
+        for x in range(self.x_lim):
+            for y in range(self.y_lim):
+                if self.spawners[x, y] > 0 and self.packages[x,y] < 9:
+                    if random.random() < package_spawn_chance:
+                        self.packages[x,y] += 1
+
+
+        # === Return ===
         obs = self.to_array()
-        reward = 0
 
         self.t += 1
         done = self.t >= self.step_lim

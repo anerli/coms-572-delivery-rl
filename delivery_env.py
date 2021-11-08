@@ -68,6 +68,7 @@ class DeliveryEnv(gym.Env):
         
     def render(self, mode='human'):
         self.state.render()
+        print()
     
 if __name__ == '__main__':
     env = DeliveryEnv(5, 4)
@@ -82,8 +83,14 @@ if __name__ == '__main__':
 
     env.render()
 
-    print()
+    env.step(DeliveryAction.MOVE_RIGHT)
 
+    env.render()
+
+    env.step(DeliveryAction.MOVE_RIGHT)
+
+    env.render()
+    
     env.step(DeliveryAction.MOVE_RIGHT)
 
     env.render()

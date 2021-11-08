@@ -19,3 +19,12 @@ c 3
 This confusion is necessary due to conflicting coventions of matrix
 indexing and digital 2D space representation. (i.e. (row, col)~(y, x) vs (x, y))
 '''
+
+Not true:
+        # Since we use [x, y] to setup state, 
+        # in order to draw it as if x is horizontal and y is vertical, 
+        # x needs to be the column and y needs to be the row.
+        # However when we set [x, y] we were setting [row, col]
+        # Thus we need to switch x and y when rendering.
+
+Since accessing mat by [x,y] it doesn't matter how it's internally stored really

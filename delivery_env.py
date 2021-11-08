@@ -90,7 +90,15 @@ if __name__ == '__main__':
     env.step(DeliveryAction.MOVE_RIGHT)
 
     env.render()
-    
+
     env.step(DeliveryAction.MOVE_RIGHT)
+
+    env.render()
+
+    env.step(DeliveryAction.MOVE_DOWN)
+
+    env.render()
+
+    env.step(DeliveryAction.GRAB_DOWN)
 
     env.render()

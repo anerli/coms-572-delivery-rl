@@ -96,10 +96,21 @@ class DeliveryState:
         return (0 <= pos[0] < self.x_lim) and (0 <= pos[1] < self.y_lim)
 
     def move(self, pos):
-        if not self.in_bounds(pos):
-            return
+        # Move the packages the player is carrying
+        # Opposite logic of grab! Fun
+        self.packages[pos[0], pos[1]] = self.packages[self.player[0], self.player[1]]
+        self.packages[self.player[0], self.player[1]] = 0
+
+        # Move the player
         self.player[0] = pos[0]
         self.player[1] = pos[1]
+
+    def grab(self, pos):
+        self.packages[self.player[0], self.player[1]] = self.packages[pos[0], pos[1]]
+        self.packages[pos[0], pos[1]] = 0
+
+    
+        
 
     def step(self, action):
         reward = 0
@@ -111,12 +122,22 @@ class DeliveryState:
         act = arr[0]
         direction = arr[1]
         pos = self.direction_to_pos(direction)
-        if act == 'MOVE':
+
+        if not self.in_bounds(pos):
+            pass
+        elif act == 'MOVE':
             self.move(pos)
+        elif act == 'GRAB':
+            self.grab(pos)
+        elif act == 'DROP':
+            self.drop(pos)
         #print(act, direction)
 
 
         # === Spawn Packages ===
+        # This could go before or after player action,
+        # but I think it makes sense for the agent to only grab packages
+        # seen in the last state, not newly generated ones.
         package_spawn_chance = 0.5
         for x in range(self.x_lim):
             for y in range(self.y_lim):

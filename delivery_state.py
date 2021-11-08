@@ -21,7 +21,7 @@ class DeliveryState:
         # Step
         self.t = 0
         # Player coordinates
-        self.player = np.array([2, 0], dtype=self.dtype)
+        self.player = (0, 0)#np.array([0, 0], dtype=self.dtype)
         # Package Pickup Locations
         self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
         # Current Package Locations, value indicates num packages.
@@ -37,15 +37,15 @@ class DeliveryState:
         # self.pickups
         # print(space)
 
-        self.spawners[4,2] = 1
-        self.dropoffs[1, 3] = 1
-        self.dropoffs[0, 0] = 1
+        # self.spawners[4,2] = 1
+        # self.dropoffs[1, 3] = 1
+        # self.dropoffs[0, 0] = 1
 
     def to_array(self):
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
         # That way the returned array can be part of an observation space defined
         # based on what is returned here.
-        return (self.player, self.spawners, self.packages, self.dropoffs)
+        return (np.array(self.player, dtype=self.dtype), self.spawners, self.packages, self.dropoffs)
 
     def render(self):
         for y in range(self.y_lim):
@@ -104,8 +104,7 @@ class DeliveryState:
         self.move_packages(self.player, pos)
 
         # Move the player
-        self.player[0] = pos[0]
-        self.player[1] = pos[1]
+        self.player = pos
 
     def grab(self, pos):
         self.move_packages(pos, self.player)

@@ -69,17 +69,13 @@ class DeliveryEnv(gym.Env):
         
     def render(self, mode='human'):
         self.state.render()
-    
-if __name__ == '__main__':
+
+def predefined_behavior_test():
     env = DeliveryEnv(5, 4)
-    # print('Action Space Shape:', env.action_space.n)
-    # print('Action Space Samples:')
-    # for _ in range(10):
-    #     print(env.action_space.sample())
-    # print('Observation Space Shape:', env.observation_space.shape)
-    # print('Observation Space Samples:')
-    # for _ in range(10):
-    #     print(env.observation_space.sample())
+    env.state.player = (2, 0)
+    env.state.spawners[4,2] = 1
+    env.state.dropoffs[1, 3] = 1
+    env.state.dropoffs[0, 0] = 1
 
     test_actions = [
         # Move to pickup location
@@ -100,7 +96,6 @@ if __name__ == '__main__':
 
     env.render()
     print()
-
     for action in test_actions:
         obs, reward, done, info = env.step(action)
         print('Action:', action.name)
@@ -108,4 +103,18 @@ if __name__ == '__main__':
         print('Resultant State:')
         env.render()
         print()
+
+    
+if __name__ == '__main__':
+    predefined_behavior_test()
+    # print('Action Space Shape:', env.action_space.n)
+    # print('Action Space Samples:')
+    # for _ in range(10):
+    #     print(env.action_space.sample())
+    # print('Observation Space Shape:', env.observation_space.shape)
+    # print('Observation Space Samples:')
+    # for _ in range(10):
+    #     print(env.observation_space.sample())
+
+    
     

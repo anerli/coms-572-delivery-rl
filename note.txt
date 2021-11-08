@@ -1,0 +1,21 @@
+'''
+Notice:
+These arrays can be accessed by [x, y] but they are stored
+as though each subarray is a column.
+
+So 
+[
+	[a, b, c],
+	[1, 2, 3]
+]
+
+Represents the game state:
+a 1
+b 2
+c 3
+
+-> This is why we have the render function to make it prettier anyway.
+
+This confusion is necessary due to conflicting coventions of matrix
+indexing and digital 2D space representation. (i.e. (row, col)~(y, x) vs (x, y))
+'''

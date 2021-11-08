@@ -1,45 +1,48 @@
+from operator import xor
 import gym
 from gym.spaces import Discrete, Box, Tuple
 import numpy as np
 import random
+
+class Colors:
+    RED = '\u001b[31m'
+    BG_RED = '\u001b[41m' # Use for player
+
+    BG_MAGENTA = '\u001b[45m' # Use for pickup
+
+    BG_GREEN = '\u001b[42m' # Use for dropoff
+
+    RESET = '\u001b[0m'
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 # Discrete data type used for np.array representations.
 DTYPE = np.uint8
 
 class DeliveryState:
     def __init__(self, x_lim, y_lim):
+        self.reset()
+
+    def reset(self):
         global DTYPE
         # Player coordinates
         self.player = np.array([0, 0], dtype=DTYPE)
-
-        '''
-        Notice:
-        These arrays can be accessed by [x, y] but they are stored
-        as though each subarray is a column.
-
-        So 
-        [
-            [a, b, c],
-            [1, 2, 3]
-        ]
-
-        Represents the game state:
-        a 1
-        b 2
-        c 3
-
-        -> This is why we have the render function to make it prettier anyway.
-
-        This confusion is necessary due to conflicting coventions of matrix
-        indexing and digital 2D space representation. (i.e. (row, col)~(y, x) vs (x, y))
-        '''
-
         # Package Pickup Locations
         self.pickups = np.zeros(shape=(x_lim, y_lim), dtype=DTYPE)
         # Current Package Locations, value indicates num packages.
         self.packages = np.zeros(shape=(x_lim, y_lim), dtype=DTYPE)
         # Package Dropoff Locations
         self.dropoffs = np.zeros(shape=(x_lim, y_lim), dtype=DTYPE)
+
 
     def to_array(self):
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
@@ -97,6 +100,8 @@ class DeliveryEnv(gym.Env):
                 dtype=DTYPE
             ),
         ))
+
+        self.state = DeliveryState(x_lim, y_lim)
         # self.observation_space = gym.spaces.Tuple((gym.spaces.Box(
         #     low=np.array([0,0], dtype=dtype),
         #     high=np.array([100, 20000], dtype=dtype),
@@ -110,8 +115,8 @@ class DeliveryEnv(gym.Env):
         
 
     def reset(self):
-        pass
-        #return np.array([0, 0])
+        self.state.reset()
+        return self.state.to_array()
 
     def step(self, action):
         pass

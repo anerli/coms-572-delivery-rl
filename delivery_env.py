@@ -2,42 +2,49 @@ import gym
 from gym.spaces import Discrete, Box, Tuple
 import numpy as np
 import random
-
-# https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-class Colors:
-    RED = '\u001b[31m'
-    BLACK = '\u001b[30m'
-    BG_RED = '\u001b[41m' # Use for player
-    BG_BRIGHT_RED = '\u001b[41;1m'
-    BG_MAGENTA = '\u001b[45m' # Use for pickup
-    BG_GREEN = '\u001b[42m' # Use for dropoff
-    BG_BLUE = '\u001b[44m'
-    BG_YELLOW = '\u001b[43m'
-
-    # Blue-ish BG
-    PLAYER = '\u001b[48;2;40;180;255;38;2;0;0;0m'
-
-    # Yellowish BG
-    PICKUP = '\u001b[48;2;200;200;0;38;2;0;0;0m'
-
-    # Dark green BG
-    DROPOFF = '\u001b[48;2;0;200;0;38;2;0;0;0m'
-
-    RESET = '\u001b[0m'
+from enum import Enum, auto
 
 # Discrete data type used for np.array representations.
 DTYPE = np.uint8
 
+# https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
+class Colors:
+    # Blue-ish BG, black FG
+    PLAYER = '\u001b[48;2;40;180;255;38;2;0;0;0m'
+    # Yellowish BG, black FG
+    PICKUP = '\u001b[48;2;200;200;0;38;2;0;0;0m'
+    # Dark green BG, black FG
+    DROPOFF = '\u001b[48;2;0;200;0;38;2;0;0;0m'
+
+    RESET = '\u001b[0m'
+
+class Action(Enum):
+    MOVE_UP = auto()
+    MOVE_RIGHT = auto()
+    MOVE_DOWN = auto()
+    MOVE_LEFT = auto()
+    GRAB_UP = auto()
+    GRAB_RIGHT = auto()
+    GRAB_DOWN = auto()
+    GRAB_LEFT = auto()
+    DROP_UP = auto()
+    DROP_RIGHT = auto()
+    DROP_DOWN = auto()
+    DROP_LEFT = auto()
+
 class DeliveryState:
-    def __init__(self, x_lim, y_lim):
+    def __init__(self, x_lim, y_lim, step_lim=60):
         self.x_lim = x_lim
         self.y_lim = y_lim
+        self.step_lim = step_lim
         self.reset()
 
     def reset(self):
         global DTYPE
+        # Step
+        self.t = 0
         # Player coordinates
-        self.player = np.array([1, 0], dtype=DTYPE)
+        self.player = np.array([2, 0], dtype=DTYPE)
         # Package Pickup Locations
         self.pickups = np.zeros(shape=(self.x_lim, self.y_lim), dtype=DTYPE)
         # Current Package Locations, value indicates num packages.
@@ -45,7 +52,7 @@ class DeliveryState:
         # Package Dropoff Locations
         self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=DTYPE)
 
-        # TODO: Create some pickup / dropoff locations by setting some of those array values to 1.
+        # Create some pickup / dropoff locations by setting some of those array values to 1.
         # Sample without replacement
         # For random:
 
@@ -55,11 +62,9 @@ class DeliveryState:
         # self.pickups
         # print(space)
 
-        self.pickups[2,2] = 1
-        self.dropoffs[0, 2] = 1
-        self.dropoffs[0, 1] = 1
-
-
+        self.pickups[4,2] = 1
+        self.dropoffs[1, 3] = 1
+        self.dropoffs[0, 0] = 1
 
     def to_array(self):
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
@@ -68,10 +73,10 @@ class DeliveryState:
         return (self.player, self.pickups, self.packages, self.dropoffs)
 
     def render(self):
-        print(f'{self.player=}')
-        print(f'{self.pickups=}')
-        print(f'{self.packages=}')
-        print(f'{self.dropoffs=}')
+        # print(f'{self.player=}')
+        # print(f'{self.pickups=}')
+        # print(f'{self.packages=}')
+        # print(f'{self.dropoffs=}')
 
 
         for y in range(self.y_lim):
@@ -94,8 +99,56 @@ class DeliveryState:
 
                 print(ch, end='')
                 if x < self.x_lim - 1:
+                    #print(' | ', end='')
                     print(end=' ')
             print()
+            # if y < self.y_lim - 1:
+            #     print('\n' + '-'*self.x_lim*3)
+            # else:
+            #     print()
+
+    @classmethod
+    def direction_to_vec(cls, direction_str):
+        if direction_str == 'UP':
+            return (0, -1)
+        if direction_str == 'RIGHT':
+            return (1, 0)
+        if direction_str == 'DOWN':
+            return (0, 1)
+        if direction_str == 'LEFT':
+            return (-1, 0)
+
+    # Convert direction relative to the player to coordinates
+    def direction_to_pos(self, direction_str):
+        vec = DeliveryState.direction_to_vec(direction_str)
+        return (self.player[0]+vec[0], self.player[1]+vec[1])
+
+    def in_bounds(self, pos):
+        return (0 <= pos[0] < self.x_lim) and (0 <= pos[1] < self.y_lim)
+
+    def move(self, pos):
+        if not self.in_bounds(pos):
+            return
+        self.player[0] = pos[0]
+        self.player[1] = pos[1]
+
+    def step(self, action):
+        action_name = Action(action).name
+        arr = action_name.split('_')
+        act = arr[0]
+        direction = arr[1]
+        pos = self.direction_to_pos(direction)
+        if act == 'MOVE':
+            self.move(pos)
+        #print(act, direction)
+
+        obs = self.to_array()
+        reward = 0
+
+        self.t += 1
+        done = self.t >= self.step_lim
+        info = {}
+        return obs, reward, done, info
 
 class DeliveryEnv(gym.Env):
     '''
@@ -111,7 +164,7 @@ class DeliveryEnv(gym.Env):
         - Grab Up/Right/Down/Left (4)
         - Drop Up/Right/Down/Left (4)
         '''
-        self.action_space = Discrete(12)
+        self.action_space = Discrete(len(Action))
 
         # https://numpy.org/doc/stable/reference/arrays.scalars.html
         #dtype = np.uint8
@@ -150,13 +203,13 @@ class DeliveryEnv(gym.Env):
         return self.state.to_array()
 
     def step(self, action):
-        pass
-
+        return self.state.step(action)
+        
     def render(self, mode='human'):
         self.state.render()
     
 if __name__ == '__main__':
-    env = DeliveryEnv(3, 4)
+    env = DeliveryEnv(5, 4)
     # print('Action Space Shape:', env.action_space.n)
     # print('Action Space Samples:')
     # for _ in range(10):
@@ -165,5 +218,9 @@ if __name__ == '__main__':
     # print('Observation Space Samples:')
     # for _ in range(10):
     #     print(env.observation_space.sample())
+
+    env.render()
+
+    env.step(Action.MOVE_RIGHT)
 
     env.render()

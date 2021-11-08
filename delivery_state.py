@@ -40,9 +40,7 @@ class DeliveryState:
         self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
 
         # Create some pickup / dropoff locations by setting some of those array values to 1.
-        # Sample without replacement
-        # For random:
-
+        # Sample without replacement:
         # space = [(x, y) for x in range(self.x_lim) for y in range(self.y_lim)]
         # pickup_loc = random.choice(space)
         # space.remove(pickup_loc)
@@ -60,11 +58,6 @@ class DeliveryState:
         return (self.player, self.pickups, self.packages, self.dropoffs)
 
     def render(self):
-        # print(f'{self.player=}')
-        # print(f'{self.pickups=}')
-        # print(f'{self.packages=}')
-        # print(f'{self.dropoffs=}')
-
         for y in range(self.y_lim):
             for x in range(self.x_lim):
                 ch = ''

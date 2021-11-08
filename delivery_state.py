@@ -95,26 +95,37 @@ class DeliveryState:
     def in_bounds(self, pos):
         return (0 <= pos[0] < self.x_lim) and (0 <= pos[1] < self.y_lim)
 
+    def move_packages(self, from_pos, to_pos):
+        self.packages[to_pos[0], to_pos[1]] = self.packages[from_pos[0], from_pos[1]]
+        self.packages[from_pos[0], from_pos[1]] = 0
+
     def move(self, pos):
-        # Move the packages the player is carrying
-        # Opposite logic of grab! Fun
-        self.packages[pos[0], pos[1]] = self.packages[self.player[0], self.player[1]]
-        self.packages[self.player[0], self.player[1]] = 0
+        # Move the packages the player is carrying to where the player will be.
+        self.move_packages(self.player, pos)
 
         # Move the player
         self.player[0] = pos[0]
         self.player[1] = pos[1]
 
     def grab(self, pos):
-        self.packages[self.player[0], self.player[1]] = self.packages[pos[0], pos[1]]
-        self.packages[pos[0], pos[1]] = 0
+        self.move_packages(pos, self.player)
 
-    
+    '''
+    Do drop action and return any reward gained from depositing at a dropoff.
+    '''
+    def drop(self, pos):
+        packages_deposited = 0
+        self.move_packages(self.player, pos)
+        if self.dropoffs[pos[0], pos[1]] > 0:
+            packages_deposited += self.packages[pos[0], pos[1]]
+            # Clear packages to "deposit" them.
+            self.packages[pos[0], pos[1]] = 0
+        # Reward
+        return packages_deposited
         
 
     def step(self, action):
         reward = 0
-    
 
         # === Handle Agent Action ===
         action_name = DeliveryAction(action).name
@@ -130,7 +141,7 @@ class DeliveryState:
         elif act == 'GRAB':
             self.grab(pos)
         elif act == 'DROP':
-            self.drop(pos)
+            reward += self.drop(pos)
         #print(act, direction)
 
 

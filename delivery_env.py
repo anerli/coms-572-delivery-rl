@@ -64,11 +64,11 @@ class DeliveryEnv(gym.Env):
         return self.state.to_array()
 
     def step(self, action):
-        return self.state.step(action)
+        obs, reward, done, info = self.state.step(action)
+        return obs, reward, done, info
         
     def render(self, mode='human'):
         self.state.render()
-        print()
     
 if __name__ == '__main__':
     env = DeliveryEnv(5, 4)
@@ -81,24 +81,31 @@ if __name__ == '__main__':
     # for _ in range(10):
     #     print(env.observation_space.sample())
 
-    env.render()
-
-    env.step(DeliveryAction.MOVE_RIGHT)
-
-    env.render()
-
-    env.step(DeliveryAction.MOVE_RIGHT)
-
-    env.render()
-
-    env.step(DeliveryAction.MOVE_RIGHT)
-
-    env.render()
-
-    env.step(DeliveryAction.MOVE_DOWN)
-
-    env.render()
-
-    env.step(DeliveryAction.GRAB_DOWN)
+    test_actions = [
+        # Move to pickup location
+        DeliveryAction.MOVE_RIGHT,
+        DeliveryAction.MOVE_RIGHT,
+        DeliveryAction.MOVE_RIGHT,
+        DeliveryAction.MOVE_DOWN,
+        # Grab packages
+        DeliveryAction.GRAB_DOWN,
+        # Move to deposit
+        DeliveryAction.MOVE_LEFT,
+        DeliveryAction.MOVE_LEFT,
+        DeliveryAction.MOVE_LEFT,
+        DeliveryAction.MOVE_LEFT,
+        # Deposit (should result in reward)
+        DeliveryAction.DROP_UP,
+    ]
 
     env.render()
+    print()
+
+    for action in test_actions:
+        obs, reward, done, info = env.step(action)
+        print('Action:', action.name)
+        print('Reward:', reward)
+        print('Resultant State:')
+        env.render()
+        print()
+    

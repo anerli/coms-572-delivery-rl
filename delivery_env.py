@@ -106,17 +106,6 @@ def random_actions_test():
 
     
 if __name__ == '__main__':
-    #predefined_behavior_test()
-    random_actions_test()
-
-    # print('Action Space Shape:', env.action_space.n)
-    # print('Action Space Samples:')
-    # for _ in range(10):
-    #     print(env.action_space.sample())
-    # print('Observation Space Shape:', env.observation_space.shape)
-    # print('Observation Space Samples:')
-    # for _ in range(10):
-    #     print(env.observation_space.sample())
-
-    
+    predefined_behavior_test()
+    #random_actions_test()
     

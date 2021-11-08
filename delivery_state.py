@@ -102,8 +102,8 @@ class DeliveryState:
         return self.dropoffs[pos] > 0 or self.spawners[pos] > 0 or self.packages[pos] > 0
 
     def move_packages(self, from_pos, to_pos):
-        self.packages[to_pos[0], to_pos[1]] = self.packages[from_pos[0], from_pos[1]]
-        self.packages[from_pos[0], from_pos[1]] = 0
+        self.packages[to_pos] = self.packages[from_pos]
+        self.packages[from_pos] = 0
 
     def move(self, pos):
         if self.occupied(pos):
@@ -123,10 +123,10 @@ class DeliveryState:
     def drop(self, pos):
         packages_deposited = 0
         self.move_packages(self.player, pos)
-        if self.dropoffs[pos[0], pos[1]] > 0:
-            packages_deposited += self.packages[pos[0], pos[1]]
+        if self.dropoffs[pos] > 0:
+            packages_deposited += self.packages[pos]
             # Clear packages to "deposit" them.
-            self.packages[pos[0], pos[1]] = 0
+            self.packages[pos] = 0
         # Reward
         return packages_deposited
         

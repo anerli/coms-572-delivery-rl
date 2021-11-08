@@ -10,7 +10,7 @@ class DeliveryState:
     dtype: data type of underlying np.arrays.
     step_lim: steps before marking as terminal.
     '''
-    def __init__(self, x_lim, y_lim, dtype, step_lim=60):
+    def __init__(self, x_lim, y_lim, step_lim=60, dtype=np.uint8):
         self.x_lim = x_lim
         self.y_lim = y_lim
         self.dtype = dtype

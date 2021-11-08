@@ -9,7 +9,12 @@ class DeliveryEnv(gym.Env):
     '''
     x_lim:
     '''
-    def __init__(self, x_lim, y_lim, dtype=np.uint8):
+    def __init__(self, init_state: DeliveryState):
+        self.state = init_state
+        x_lim = init_state.x_lim
+        y_lim = init_state.y_lim
+        dtype = init_state.dtype
+
         # https://gym.openai.com/docs/#spaces
         self.action_space = Discrete(len(DeliveryAction))
 
@@ -39,8 +44,6 @@ class DeliveryEnv(gym.Env):
                 dtype=dtype
             ),
         ))
-
-        self.state = DeliveryState(x_lim, y_lim, dtype=dtype)
         
     def reset(self):
         self.state.reset()
@@ -54,11 +57,12 @@ class DeliveryEnv(gym.Env):
         self.state.render()
 
 def predefined_behavior_test():
-    env = DeliveryEnv(5, 4)
-    env.state.player = (2, 0)
-    env.state.spawners[4, 2] = 1
-    env.state.dropoffs[1, 3] = 1
-    env.state.dropoffs[0, 0] = 1
+    init_state = DeliveryState(5, 4)
+    init_state.player = (2, 0)
+    init_state.spawners[4, 2] = 1
+    init_state.dropoffs[1, 3] = 1
+    init_state.dropoffs[0, 0] = 1
+    env = DeliveryEnv(init_state)
 
     test_actions = [
         # Move to pickup location
@@ -88,11 +92,13 @@ def predefined_behavior_test():
         print()
 
 def random_actions_test():
-    env = DeliveryEnv(5, 4)
-    env.state.player = (2, 0)
-    env.state.spawners[4, 2] = 1
-    env.state.dropoffs[1, 3] = 1
-    env.state.dropoffs[0, 0] = 1
+    init_state = DeliveryState(5, 4)
+    init_state.player = (2, 0)
+    init_state.spawners[4, 2] = 1
+    init_state.dropoffs[1, 3] = 1
+    init_state.dropoffs[0, 0] = 1
+    env = DeliveryEnv(init_state)
+
     done = False
     while not done:
         action = env.action_space.sample()

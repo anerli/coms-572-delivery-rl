@@ -95,11 +95,19 @@ class DeliveryState:
     def in_bounds(self, pos):
         return (0 <= pos[0] < self.x_lim) and (0 <= pos[1] < self.y_lim)
 
+    def occupied(self, pos):
+        # Apparently can pass a tuple to np indexer
+        # equivalent to [pos[0], pos[1]]
+        # Player blocked by drop offs, spawners, and any stray packages
+        return self.dropoffs[pos] > 0 or self.spawners[pos] > 0 or self.packages[pos] > 0
+
     def move_packages(self, from_pos, to_pos):
         self.packages[to_pos[0], to_pos[1]] = self.packages[from_pos[0], from_pos[1]]
         self.packages[from_pos[0], from_pos[1]] = 0
 
     def move(self, pos):
+        if self.occupied(pos):
+            return
         # Move the packages the player is carrying to where the player will be.
         self.move_packages(self.player, pos)
 

@@ -1,34 +1,18 @@
 import gym
 from gym.spaces import Discrete, Box, Tuple
 import numpy as np
+from numpy import random
 from delivery_state import DeliveryState
 from delivery_action import DeliveryAction
-
-
-# Discrete data type used for np.array representations.
-#DTYPE = np.uint8
-
-# https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-
 
 class DeliveryEnv(gym.Env):
     '''
     x_lim:
     '''
     def __init__(self, x_lim, y_lim, dtype=np.uint8):
-        #global DTYPE
         # https://gym.openai.com/docs/#spaces
-        # Can use spaces.Tuple to compose spaces
-        '''
-        Actions:
-        - Move Up/Right/Down/Left (4)
-        - Grab Up/Right/Down/Left (4)
-        - Drop Up/Right/Down/Left (4)
-        '''
         self.action_space = Discrete(len(DeliveryAction))
 
-        # https://numpy.org/doc/stable/reference/arrays.scalars.html
-        #dtype = np.uint8
         self.observation_space = Tuple((
             # Player coordinate
             Box(
@@ -58,7 +42,6 @@ class DeliveryEnv(gym.Env):
 
         self.state = DeliveryState(x_lim, y_lim, dtype=dtype)
         
-
     def reset(self):
         self.state.reset()
         return self.state.to_array()
@@ -73,7 +56,7 @@ class DeliveryEnv(gym.Env):
 def predefined_behavior_test():
     env = DeliveryEnv(5, 4)
     env.state.player = (2, 0)
-    env.state.spawners[4,2] = 1
+    env.state.spawners[4, 2] = 1
     env.state.dropoffs[1, 3] = 1
     env.state.dropoffs[0, 0] = 1
 
@@ -104,9 +87,28 @@ def predefined_behavior_test():
         env.render()
         print()
 
+def random_actions_test():
+    env = DeliveryEnv(5, 4)
+    env.state.player = (2, 0)
+    env.state.spawners[4, 2] = 1
+    env.state.dropoffs[1, 3] = 1
+    env.state.dropoffs[0, 0] = 1
+    done = False
+    while not done:
+        action = env.action_space.sample()
+        obs, reward, done, info = env.step(action)
+        print('Action:', DeliveryAction(action).name)
+        print('Reward:', reward)
+        print('Resultant State:')
+        env.render()
+        print()
+
+
     
 if __name__ == '__main__':
-    predefined_behavior_test()
+    #predefined_behavior_test()
+    random_actions_test()
+
     # print('Action Space Shape:', env.action_space.n)
     # print('Action Space Samples:')
     # for _ in range(10):

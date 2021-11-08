@@ -1,15 +1,16 @@
-from enum import Enum, auto
+from enum import Enum
 
 class DeliveryAction(Enum):
-    MOVE_UP = auto()
-    MOVE_RIGHT = auto()
-    MOVE_DOWN = auto()
-    MOVE_LEFT = auto()
-    GRAB_UP = auto()
-    GRAB_RIGHT = auto()
-    GRAB_DOWN = auto()
-    GRAB_LEFT = auto()
-    DROP_UP = auto()
-    DROP_RIGHT = auto()
-    DROP_DOWN = auto()
-    DROP_LEFT = auto()
+    # Can't use enum.auto bc auto starts at 1, not 0
+    MOVE_UP = 0
+    MOVE_RIGHT = 1
+    MOVE_DOWN = 2
+    MOVE_LEFT = 3
+    GRAB_UP = 4
+    GRAB_RIGHT = 5
+    GRAB_DOWN = 6
+    GRAB_LEFT = 7
+    DROP_UP = 8
+    DROP_RIGHT = 9
+    DROP_DOWN = 10
+    DROP_LEFT = 11

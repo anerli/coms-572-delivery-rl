@@ -5,7 +5,7 @@ import random
 from enum import Enum, auto
 
 # Discrete data type used for np.array representations.
-DTYPE = np.uint8
+#DTYPE = np.uint8
 
 # https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
 class Colors:
@@ -33,24 +33,30 @@ class Action(Enum):
     DROP_LEFT = auto()
 
 class DeliveryState:
-    def __init__(self, x_lim, y_lim, step_lim=60):
+    '''
+    x_lim: width of board.
+    y_lim: height of board.
+    dtype: data type of underlying np.arrays.
+    step_lim: steps before marking as terminal.
+    '''
+    def __init__(self, x_lim, y_lim, dtype, step_lim=60):
         self.x_lim = x_lim
         self.y_lim = y_lim
+        self.dtype = dtype
         self.step_lim = step_lim
         self.reset()
 
     def reset(self):
-        global DTYPE
         # Step
         self.t = 0
         # Player coordinates
-        self.player = np.array([2, 0], dtype=DTYPE)
+        self.player = np.array([2, 0], dtype=self.dtype)
         # Package Pickup Locations
-        self.pickups = np.zeros(shape=(self.x_lim, self.y_lim), dtype=DTYPE)
+        self.pickups = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
         # Current Package Locations, value indicates num packages.
-        self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=DTYPE)
+        self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
         # Package Dropoff Locations
-        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=DTYPE)
+        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
 
         # Create some pickup / dropoff locations by setting some of those array values to 1.
         # Sample without replacement
@@ -154,8 +160,8 @@ class DeliveryEnv(gym.Env):
     '''
     x_lim:
     '''
-    def __init__(self, x_lim, y_lim):
-        global DTYPE
+    def __init__(self, x_lim, y_lim, dtype=np.uint8):
+        #global DTYPE
         # https://gym.openai.com/docs/#spaces
         # Can use spaces.Tuple to compose spaces
         '''
@@ -173,29 +179,29 @@ class DeliveryEnv(gym.Env):
             Box(
                 low=np.array([0, 0]),
                 high=np.array([x_lim-1, y_lim-1]),
-                dtype=DTYPE
+                dtype=dtype
             ),
             # Pickup Locations
             Box(
                 low=np.zeros((x_lim, y_lim)),
                 high=np.full((x_lim, y_lim), 1),
-                dtype=DTYPE
+                dtype=dtype
             ),
             # Package Locations
             Box(
                 low=np.zeros((x_lim, y_lim)),
                 high=np.full((x_lim, y_lim), 9), # Say max of 9 packages at any given location (so we can display with one char)
-                dtype=DTYPE
+                dtype=dtype
             ),
             # Dropoff Locations
             Box(
                 low=np.zeros((x_lim, y_lim)),
                 high=np.full((x_lim, y_lim), 1),
-                dtype=DTYPE
+                dtype=dtype
             ),
         ))
 
-        self.state = DeliveryState(x_lim, y_lim)
+        self.state = DeliveryState(x_lim, y_lim, dtype=dtype)
         
 
     def reset(self):
@@ -220,6 +226,8 @@ if __name__ == '__main__':
     #     print(env.observation_space.sample())
 
     env.render()
+
+    print()
 
     env.step(Action.MOVE_RIGHT)
 

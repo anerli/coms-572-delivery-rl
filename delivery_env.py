@@ -3,6 +3,7 @@ from gym.spaces import Discrete, Box, Tuple
 import numpy as np
 import random
 
+# Discrete data type used for np.array representations.
 DTYPE = np.uint8
 
 class DeliveryState:
@@ -70,8 +71,31 @@ class DeliveryEnv(gym.Env):
 
         # https://numpy.org/doc/stable/reference/arrays.scalars.html
         #dtype = np.uint8
-        self.overvation_space = Tuple((
-            Box()
+        self.observation_space = Tuple((
+            # Player coordinate
+            Box(
+                low=np.array([0, 0]),
+                high=np.array([x_lim-1, y_lim-1]),
+                dtype=DTYPE
+            ),
+            # Pickup Locations
+            Box(
+                low=np.zeros((x_lim, y_lim)),
+                high=np.full((x_lim, y_lim), 1),
+                dtype=DTYPE
+            ),
+            # Package Locations
+            Box(
+                low=np.zeros((x_lim, y_lim)),
+                high=np.full((x_lim, y_lim), 10), # Say max of 10 packages at any given location
+                dtype=DTYPE
+            ),
+            # Dropoff Locations
+            Box(
+                low=np.zeros((x_lim, y_lim)),
+                high=np.full((x_lim, y_lim), 1),
+                dtype=DTYPE
+            ),
         ))
         # self.observation_space = gym.spaces.Tuple((gym.spaces.Box(
         #     low=np.array([0,0], dtype=dtype),
@@ -96,7 +120,7 @@ class DeliveryEnv(gym.Env):
         pass
     
 if __name__ == '__main__':
-    env = DeliveryEnv()
+    env = DeliveryEnv(3, 3)
     print('Action Space Shape:', env.action_space.n)
     print('Action Space Samples:')
     for _ in range(10):

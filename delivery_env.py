@@ -1,4 +1,3 @@
-from operator import xor
 import gym
 from gym.spaces import Discrete, Box, Tuple
 import numpy as np
@@ -7,23 +6,9 @@ import random
 class Colors:
     RED = '\u001b[31m'
     BG_RED = '\u001b[41m' # Use for player
-
     BG_MAGENTA = '\u001b[45m' # Use for pickup
-
     BG_GREEN = '\u001b[42m' # Use for dropoff
-
     RESET = '\u001b[0m'
-
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 # Discrete data type used for np.array representations.
 DTYPE = np.uint8

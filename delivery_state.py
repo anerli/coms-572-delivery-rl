@@ -17,6 +17,8 @@ class DeliveryState:
         self.y_lim = y_lim
         self.dtype = dtype
         self.step_lim = step_lim
+
+        self.debug = True
         
         # == Reward params ==
         # Reward for each package delivered
@@ -128,6 +130,7 @@ class DeliveryState:
 
         # ====== Calculate package move reward ======
         # Calculate dist to closest dropoff before and after
+        reward = 0
         if self.packages[self.player] > 0:
             closest_dropoff_pos_before = None
             closest_dist_before = math.inf
@@ -140,14 +143,21 @@ class DeliveryState:
                         if dist_before < closest_dist_before:
                             closest_dropoff_pos_before = (x, y)
                             closest_dist_before = dist_before
-                        dist_after = manhattan_dist(self.player, (x,y))
+                        dist_after = manhattan_dist(pos, (x,y))
                         if dist_after < closest_dist_after:
                             closest_dropoff_pos_after = (x, y)
                             closest_dist_after = dist_after
+
+            if self.debug:
+                print(f'{closest_dist_before=}')
+                print(f'{closest_dropoff_pos_before=}')
+                print(f'{closest_dist_after=}')
+                print(f'{closest_dropoff_pos_after=}')
+            improvement = closest_dist_before - closest_dist_after
+            reward += improvement * self.reward_package_dest_dist_multiplier
         # May be negative, in which case our agent is penalized for moving packages
         # away from their destinations.
-        improvement = closest_dist_before - closest_dist_after
-        reward = improvement * self.reward_package_dest_dist_multiplier
+        
         #self.packages[self.player] * self.reward_package_dest_dist_min
         # ============================================
         
@@ -190,15 +200,21 @@ class DeliveryState:
         if not self.in_bounds(pos):
             pass
         elif act == 'MOVE':
-            reward += self.move(pos)
+            movement_reward = self.move(pos)
+            if self.debug: print('Reward due to movement:', movement_reward)
+            reward += movement_reward
         elif act == 'GRAB':
             self.grab(pos)
         elif act == 'DROP':
-            reward += self.drop(pos)
+            drop_reward = self.drop(pos)
+            if self.debug: print('Reward due to drop:', drop_reward)
+            reward += drop_reward
         #print(act, direction)
 
         # === Misc Rewards ===
-        reward += self.reward_package_hold * self.packages[self.player]
+        package_hold_reward = self.reward_package_hold * self.packages[self.player]
+        if self.debug: print('Reward due to holding packages:', package_hold_reward)
+        reward += package_hold_reward
 
         # === Spawn Packages ===
         # This could go before or after player action,

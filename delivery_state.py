@@ -2,6 +2,8 @@ import numpy as np
 import random
 from delivery_action import DeliveryAction
 from colors import Colors
+from utils import manhattan_dist
+import math
 
 class DeliveryState:
     '''
@@ -15,6 +17,17 @@ class DeliveryState:
         self.y_lim = y_lim
         self.dtype = dtype
         self.step_lim = step_lim
+        
+        # == Reward params ==
+        # Reward for each package delivered
+        self.reward_delivery = 1000
+        # Multiplier for reward gained by minimizing the distance between packages and their dropoffs.
+        self.reward_package_dest_dist_multiplier = 1.0
+        # Multiplier for reward gained by minimizing distance between self and packages.
+        self.reward_self_package_dist_multiplier = 1.0
+        # Reward per step for simply holding a package
+        self.reward_package_hold = 1
+
         self.reset()
 
     def reset(self):
@@ -40,6 +53,10 @@ class DeliveryState:
         # self.spawners[4,2] = 1
         # self.dropoffs[1, 3] = 1
         # self.dropoffs[0, 0] = 1
+
+    # Cumulative manhattan distance from packages to closest dropoff
+    #def calculate_cumulative_manhattan_dist_package_dest(self):
+    #    pass
 
     def to_array(self):
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
@@ -108,11 +125,40 @@ class DeliveryState:
     def move(self, pos):
         if self.occupied(pos):
             return
+
+        # ====== Calculate package move reward ======
+        # Calculate dist to closest dropoff before and after
+        if self.packages[self.player] > 0:
+            closest_dropoff_pos_before = None
+            closest_dist_before = math.inf
+            closest_dropoff_pos_after = None
+            closest_dist_after = math.inf
+            for x in range(self.x_lim):
+                for y in range(self.y_lim):
+                    if self.dropoffs[x, y] > 0:
+                        dist_before = manhattan_dist(self.player, (x,y))
+                        if dist_before < closest_dist_before:
+                            closest_dropoff_pos_before = (x, y)
+                            closest_dist_before = dist_before
+                        dist_after = manhattan_dist(self.player, (x,y))
+                        if dist_after < closest_dist_after:
+                            closest_dropoff_pos_after = (x, y)
+                            closest_dist_after = dist_after
+        # May be negative, in which case our agent is penalized for moving packages
+        # away from their destinations.
+        improvement = closest_dist_before - closest_dist_after
+        reward = improvement * self.reward_package_dest_dist_multiplier
+        #self.packages[self.player] * self.reward_package_dest_dist_min
+        # ============================================
+        
+
         # Move the packages the player is carrying to where the player will be.
         self.move_packages(self.player, pos)
 
         # Move the player
         self.player = pos
+
+        return reward
 
     def grab(self, pos):
         self.move_packages(pos, self.player)
@@ -128,7 +174,7 @@ class DeliveryState:
             # Clear packages to "deposit" them.
             self.packages[pos] = 0
         # Reward
-        return packages_deposited
+        return packages_deposited * self.reward_delivery
         
 
     def step(self, action):
@@ -144,13 +190,15 @@ class DeliveryState:
         if not self.in_bounds(pos):
             pass
         elif act == 'MOVE':
-            self.move(pos)
+            reward += self.move(pos)
         elif act == 'GRAB':
             self.grab(pos)
         elif act == 'DROP':
             reward += self.drop(pos)
         #print(act, direction)
 
+        # === Misc Rewards ===
+        reward += self.reward_package_hold * self.packages[self.player]
 
         # === Spawn Packages ===
         # This could go before or after player action,

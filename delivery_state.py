@@ -18,13 +18,13 @@ class DeliveryState:
         self.dtype = dtype
         self.step_lim = step_lim
 
-        self.debug = True
+        self.debug = False
         
         # == Reward params ==
         # Reward for each package delivered
         self.reward_delivery = 1000
         # Multiplier for reward gained by minimizing the distance between packages and their dropoffs.
-        self.reward_package_dest_dist_multiplier = 1.0
+        self.reward_package_dest_dist_multiplier = 2.0
         # Multiplier for reward gained by minimizing distance between self and packages.
         self.reward_self_package_dist_multiplier = 1.0
         # Reward per step for simply holding a package
@@ -154,7 +154,7 @@ class DeliveryState:
                 print(f'{closest_dist_after=}')
                 print(f'{closest_dropoff_pos_after=}')
             improvement = closest_dist_before - closest_dist_after
-            reward += improvement * self.reward_package_dest_dist_multiplier
+            reward += improvement * self.packages[self.player] * self.reward_package_dest_dist_multiplier
         # May be negative, in which case our agent is penalized for moving packages
         # away from their destinations.
         
@@ -188,7 +188,7 @@ class DeliveryState:
         
 
     def step(self, action):
-        reward = 0
+        reward = 0.0
 
         # === Handle Agent Action ===
         action_name = DeliveryAction(action).name

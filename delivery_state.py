@@ -30,7 +30,10 @@ class DeliveryState:
         # Multiplier for reward gained by minimizing distance between self and packages.
         self.reward_self_package_dist_multiplier = 1.0
         # Reward per step for simply holding a package
-        self.reward_package_hold = 1
+        self.reward_package_hold = 0
+        # Penalty for being an idiot, like trying to go outside bounds or running into something
+        # (penalty for making an invalid move, which results in a pass)
+        self.idiot_penalty = -100
 
         # Player coordinates
         self.player = (0, 0)#np.array([0, 0], dtype=self.dtype)
@@ -75,7 +78,7 @@ class DeliveryState:
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
         # That way the returned array can be part of an observation space defined
         # based on what is returned here.
-        return (np.array(self.player, dtype=self.dtype), self.spawners, self.packages, self.dropoffs)
+        return {'player': np.array(self.player, dtype=self.dtype), 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
 
     def render(self):
         for y in range(self.y_lim):
@@ -137,7 +140,7 @@ class DeliveryState:
 
     def move(self, pos):
         if self.occupied(pos):
-            return 0
+            return self.idiot_penalty
 
         # ====== Calculate package move reward ======
         # Calculate dist to closest dropoff before and after
@@ -182,12 +185,18 @@ class DeliveryState:
         return reward
 
     def grab(self, pos):
+        if self.packages[pos] == 0:
+            return self.idiot_penalty
         self.move_packages(pos, self.player)
+        return 0
 
     '''
     Do drop action and return any reward gained from depositing at a dropoff.
     '''
     def drop(self, pos):
+        if self.packages[self.player] == 0:
+            return self.idiot_penalty
+
         packages_deposited = 0
         self.move_packages(self.player, pos)
         if self.dropoffs[pos] > 0:
@@ -213,13 +222,13 @@ class DeliveryState:
         pos = self.direction_to_pos(direction)
 
         if not self.in_bounds(pos):
-            pass
+            reward += self.idiot_penalty
         elif act == 'MOVE':
             movement_reward = self.move(pos)
             if self.debug: print('Reward due to movement:', movement_reward)
             reward += movement_reward
         elif act == 'GRAB':
-            self.grab(pos)
+            reward += self.grab(pos)
         elif act == 'DROP':
             drop_reward = self.drop(pos)
             if self.debug: print('Reward due to drop:', drop_reward)
@@ -254,10 +263,10 @@ class DeliveryState:
         info = {}
 
         # DEBUG
-        print('Action:', DeliveryAction(action).name)
-        print('Reward:', reward)
-        print('Resultant State:')
-        self.render()
-        print()
+        # print('Action:', DeliveryAction(action).name)
+        # print('Reward:', reward)
+        # print('Resultant State:')
+        # self.render()
+        # print()
 
         return obs, reward, done, info

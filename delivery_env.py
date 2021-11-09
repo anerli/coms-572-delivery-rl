@@ -1,5 +1,5 @@
 import gym
-from gym.spaces import Discrete, Box, Tuple
+from gym.spaces import Discrete, Box, Dict
 import numpy as np
 from numpy import random
 from delivery_state import DeliveryState
@@ -31,32 +31,32 @@ class DeliveryEnv(gym.Env):
         # https://stackoverflow.com/questions/58964267/how-to-create-an-openai-gym-observation-space-with-multiple-features
         # RLlib claims to support Tuple spaces and Dict spaces:
         # https://docs.ray.io/en/latest/rllib-models.html#variable-length-complex-observation-spaces
-        self.observation_space = Tuple((
+        self.observation_space = Dict({
             # Player coordinate
-            Box(
+            'player': Box(
                 low=np.array([0, 0]),
                 high=np.array([x_lim-1, y_lim-1]),
                 dtype=dtype
             ),
             # Pickup Locations
-            Box(
+            'spawners': Box(
                 low=np.zeros((x_lim, y_lim)),
                 high=np.full((x_lim, y_lim), 1),
                 dtype=dtype
             ),
             # Package Locations
-            Box(
+            'packages': Box(
                 low=np.zeros((x_lim, y_lim)),
                 high=np.full((x_lim, y_lim), 9), # Say max of 9 packages at any given location (so we can display with one char)
                 dtype=dtype
             ),
             # Dropoff Locations
-            Box(
+            'dropoffs': Box(
                 low=np.zeros((x_lim, y_lim)),
                 high=np.full((x_lim, y_lim), 1),
                 dtype=dtype
             ),
-        ))
+        })
         
     def reset(self):
         self.state.reset()

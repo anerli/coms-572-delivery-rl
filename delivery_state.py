@@ -12,11 +12,13 @@ class DeliveryState:
     dtype: data type of underlying np.arrays.
     step_lim: steps before marking as terminal.
     '''
-    def __init__(self, x_lim, y_lim, step_lim=60, dtype=np.uint8):
+    def __init__(self, x_lim, y_lim, init_player_pos=(0,0), step_lim=60, dtype=np.uint8):
         self.x_lim = x_lim
         self.y_lim = y_lim
         self.dtype = dtype
         self.step_lim = step_lim
+
+        self.init_player = init_player_pos
 
         self.debug = False
         
@@ -30,19 +32,28 @@ class DeliveryState:
         # Reward per step for simply holding a package
         self.reward_package_hold = 1
 
+        # Player coordinates
+        self.player = (0, 0)#np.array([0, 0], dtype=self.dtype)
+        # Current Package Locations, value indicates num packages.
+        self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+
+        # === Package and Dropoff arrays should remain constant, even through episode resets ===
+        # Package Pickup Locations
+        self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+        # Package Dropoff Locations
+        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+
         self.reset()
 
     def reset(self):
         # Step
         self.t = 0
-        # Player coordinates
-        self.player = (0, 0)#np.array([0, 0], dtype=self.dtype)
-        # Package Pickup Locations
-        self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
-        # Current Package Locations, value indicates num packages.
+        
+        # Reset Player position
+        self.player = self.init_player
+        # Clear Packages
         self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
-        # Package Dropoff Locations
-        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+        
 
         # Create some pickup / dropoff locations by setting some of those array values to 1.
         # Sample without replacement:
@@ -188,6 +199,10 @@ class DeliveryState:
         
 
     def step(self, action):
+        # DEBUG
+        # Log action
+        #print(DeliveryAction(action).name)
+
         reward = 0.0
 
         # === Handle Agent Action ===
@@ -237,4 +252,12 @@ class DeliveryState:
         self.t += 1
         done = self.t >= self.step_lim
         info = {}
+
+        # DEBUG
+        print('Action:', DeliveryAction(action).name)
+        print('Reward:', reward)
+        print('Resultant State:')
+        self.render()
+        print()
+
         return obs, reward, done, info

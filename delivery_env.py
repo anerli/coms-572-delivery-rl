@@ -123,6 +123,7 @@ def random_actions_test():
             print('Resultant State:')
             env.render()
             print()
+            break
 
 
     

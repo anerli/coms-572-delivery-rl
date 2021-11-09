@@ -105,7 +105,7 @@ def predefined_behavior_test():
         print()
 
 def random_actions_test():
-    init_state = DeliveryState(5, 4)
+    init_state = DeliveryState(5, 4, step_lim=10000)
     init_state.player = (2, 0)
     init_state.spawners[4, 2] = 1
     init_state.dropoffs[1, 3] = 1
@@ -116,15 +116,17 @@ def random_actions_test():
     while not done:
         action = env.action_space.sample()
         obs, reward, done, info = env.step(action)
-        print('Action:', DeliveryAction(action).name)
-        print('Reward:', reward)
-        print('Resultant State:')
-        env.render()
-        print()
+        if reward > 0:
+            print(f'=== Reward Encountered at step {env.state.t} ===')
+            print('Action:', DeliveryAction(action).name)
+            print('Reward:', reward)
+            print('Resultant State:')
+            env.render()
+            print()
 
 
     
 if __name__ == '__main__':
-    predefined_behavior_test()
-    #random_actions_test()
+    #predefined_behavior_test()
+    random_actions_test()
     

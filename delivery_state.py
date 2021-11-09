@@ -126,7 +126,7 @@ class DeliveryState:
 
     def move(self, pos):
         if self.occupied(pos):
-            return
+            return 0
 
         # ====== Calculate package move reward ======
         # Calculate dist to closest dropoff before and after
@@ -215,6 +215,9 @@ class DeliveryState:
         package_hold_reward = self.reward_package_hold * self.packages[self.player]
         if self.debug: print('Reward due to holding packages:', package_hold_reward)
         reward += package_hold_reward
+
+        # Reward for existing, to make sure everything is working properly
+        #reward += 1
 
         # === Spawn Packages ===
         # This could go before or after player action,

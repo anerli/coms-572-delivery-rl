@@ -12,13 +12,15 @@ class DeliveryState:
     dtype: data type of underlying np.arrays.
     step_lim: steps before marking as terminal.
     '''
-    def __init__(self, x_lim, y_lim, init_player_pos=(0,0), step_lim=60, dtype=np.uint8):
+    def __init__(self, x_lim, y_lim, num_spawners, num_dropoffs, step_lim=60, dtype=np.uint8):
         self.x_lim = x_lim
         self.y_lim = y_lim
         self.dtype = dtype
         self.step_lim = step_lim
 
-        self.init_player = init_player_pos
+        #self.init_player = init_player_pos
+        self.num_spawners = num_spawners
+        self.num_dropoffs = num_dropoffs
 
         self.debug = False
         
@@ -33,18 +35,7 @@ class DeliveryState:
         self.reward_package_hold = 0
         # Penalty for being an idiot, like trying to go outside bounds or running into something
         # (penalty for making an invalid move, which results in a pass)
-        self.idiot_penalty = -100
-
-        # Player coordinates
-        self.player = (0, 0)#np.array([0, 0], dtype=self.dtype)
-        # Current Package Locations, value indicates num packages.
-        self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
-
-        # === Package and Dropoff arrays should remain constant, even through episode resets ===
-        # Package Pickup Locations
-        self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
-        # Package Dropoff Locations
-        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+        self.idiot_penalty = -2 # Consider increasing
 
         self.reset()
 
@@ -53,14 +44,32 @@ class DeliveryState:
         self.t = 0
         
         # Reset Player position
-        self.player = self.init_player
-        # Clear Packages
+        #self.player = self.init_player
+        # Current Package Locations, value indicates num packages.
         self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+         # Package Pickup Locations
+        self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+        # Package Dropoff Locations
+        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
         
-
         # Create some pickup / dropoff locations by setting some of those array values to 1.
         # Sample without replacement:
-        # space = [(x, y) for x in range(self.x_lim) for y in range(self.y_lim)]
+        space = [(x, y) for x in range(self.x_lim) for y in range(self.y_lim)]
+        
+        self.player = random.choice(space)
+        space.remove(self.player)
+
+        for _ in range(self.num_spawners):
+            pos = random.choice(space)
+            self.spawners[pos] = 1
+            space.remove(pos)
+
+        for _ in range(self.num_dropoffs):
+            pos = random.choice(space)
+            self.dropoffs[pos] = 1
+            space.remove(pos)
+
+
         # pickup_loc = random.choice(space)
         # space.remove(pickup_loc)
         # self.pickups

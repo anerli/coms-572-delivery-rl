@@ -24,3 +24,4 @@ actions = env.action_space.n
 
 print(f'{states=}')
 print(f'{actions=}')
+

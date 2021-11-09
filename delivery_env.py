@@ -11,6 +11,13 @@ class DeliveryEnv(gym.Env):
     '''
     def __init__(self, init_state: DeliveryState):
         self.state = init_state
+
+        # Debug
+        self.state.render()
+        # hmm doesn't seem to show up
+        with open('test.txt', 'w') as f:
+            f.write('Im alive!')
+
         x_lim = init_state.x_lim
         y_lim = init_state.y_lim
         dtype = init_state.dtype
@@ -18,6 +25,10 @@ class DeliveryEnv(gym.Env):
         # https://gym.openai.com/docs/#spaces
         self.action_space = Discrete(len(DeliveryAction))
 
+        # Not all libaries support the Tuple space:
+        # https://stackoverflow.com/questions/58964267/how-to-create-an-openai-gym-observation-space-with-multiple-features
+        # RLlib claims to support Tuple spaces and Dict spaces:
+        # https://docs.ray.io/en/latest/rllib-models.html#variable-length-complex-observation-spaces
         self.observation_space = Tuple((
             # Player coordinate
             Box(

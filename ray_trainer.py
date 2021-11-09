@@ -27,7 +27,8 @@ ray.init()
 #     print(trainer.train())
 
 '''
-
+agent seems to be having trouble gaining any reward at all.
+may have to add a kind of heursitic to push them to start making deliveries.
 '''
 
 ray.tune.run(ppo.PPOTrainer, config={"env": DeliveryEnvRLlib, "env_config": {'init_state': init_state}})

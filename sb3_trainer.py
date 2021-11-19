@@ -17,6 +17,8 @@ from delivery_state import DeliveryState
 from delivery_env import DeliveryEnv
 from delivery_action import DeliveryAction
 
+import torch
+
 # Vector env gets mad if not in main method
 if __name__ == '__main__':
     # Setup env
@@ -37,10 +39,20 @@ if __name__ == '__main__':
         env_makers.append(lambda: env)
     env = SubprocVecEnv(env_makers)
     '''
-
+    
+    # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html
     #model = DQN('MultiInputPolicy', env, verbose=1)
     #model = DQN.load('dqn_delivery', env=env)
-    model = PPO('MultiInputPolicy', env, verbose=1)
+
+    # pi: Refers to actor's network
+    # vf: Refers to value function's network
+    load = True
+    if load:
+        model = PPO.load('ppo_delivery2', env=env)
+    else:
+        policy_kwargs = dict(activation_fn=torch.nn.ReLU,
+            net_arch=[dict(pi=[256, 256, 256], vf=[256, 256, 256])])
+        model = PPO('MultiInputPolicy', env, verbose=1, policy_kwargs=policy_kwargs)
     #model = PPO.load('ppo_delivery2', env=env)
 
     try:

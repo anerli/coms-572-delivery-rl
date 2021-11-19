@@ -177,7 +177,14 @@ class DeliveryState:
                 print(f'{closest_dist_after=}')
                 print(f'{closest_dropoff_pos_after=}')
             improvement = closest_dist_before - closest_dist_after
-            reward += improvement * self.packages[self.player] * self.reward_package_dest_dist_multiplier
+            reward_change = improvement * self.packages[self.player] * self.reward_package_dest_dist_multiplier
+            # Lol below was disastrous, agent exploited it by grabbing packages and moving back and forth!
+            # if improvement < 0:
+            #     # Don't penalize them so hard
+            #     reward_change *= 0.5
+            reward += reward_change 
+
+            #reward += improvement * self.packages[self.player] * self.reward_package_dest_dist_multiplier
         # May be negative, in which case our agent is penalized for moving packages
         # away from their destinations.
         

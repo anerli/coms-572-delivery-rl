@@ -1,6 +1,4 @@
 from stable_baselines3 import DQN
-from stable_baselines3.common.evaluation import evaluate_policy
-from stable_baselines3.common.vec_env import SubprocVecEnv
 
 from delivery_state import DeliveryState
 from delivery_env import DeliveryEnv
@@ -9,20 +7,13 @@ from tester import test
 
 import torch
 
-import sys
 from argparse import ArgumentParser
 
 parser = ArgumentParser()
-#parser.add_argument('filename', type=str)
 parser.add_argument('-l', '--loadfile', type=str, required=False)
 parser.add_argument('-s', '--savefile', type=str, required=False)
 
 args = parser.parse_args()
-
-# if len(sys.argv) == 2 and sys.argv[1] == '-n':
-#     load = False
-# else:
-#     load = True
 
 init_state = DeliveryState(4, 4, 2, 1)
 env = DeliveryEnv(init_state)

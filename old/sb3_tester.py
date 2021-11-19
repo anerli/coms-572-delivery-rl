@@ -16,10 +16,14 @@ if __name__=='__main__':
         env_makers.append(lambda: env)
     env = SubprocVecEnv(env_makers)
     '''
-    init_state = DeliveryState(5, 5, 2, 1)
+    #init_state = DeliveryState(5, 5, 2, 1)
+    init_state = DeliveryState(4, 4, 2, 1)
     env = DeliveryEnv(init_state)
 
-    model = PPO.load('ppo_delivery2', env=env)
+    #fname = 'dqn_delivery'
+
+    #model = PPO.load(fname, env=env)
+    model = DQN.load('dqn_delivery', env=env)
 
     mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
     print(f'{mean_reward=}')

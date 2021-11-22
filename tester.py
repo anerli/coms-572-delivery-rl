@@ -17,3 +17,16 @@ def test(model, env):
         print('Resultant State:')
         env.render()
         print()
+
+if __name__ == '__main__':
+    import sys
+    from stable_baselines3 import DQN
+    from delivery_state import DeliveryState
+    from delivery_env import DeliveryEnv
+
+    init_state = DeliveryState(4, 4, 2, 1)
+    env = DeliveryEnv(init_state)
+
+    model = DQN.load(sys.argv[1], env=env)
+
+    test(model, env)

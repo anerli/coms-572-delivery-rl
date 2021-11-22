@@ -1,24 +1,12 @@
 import gym
 from gym.spaces import Discrete, Box, Dict
 import numpy as np
-from numpy import random
 from delivery_state import DeliveryState
 from delivery_action import DeliveryAction
 
 class DeliveryEnv(gym.Env):
-    '''
-    x_lim:
-    '''
     def __init__(self, init_state: DeliveryState):
         self.state = init_state
-
-        # Debug
-        print('DeliverEnv init_state:')
-        self.state.render()
-        print()
-        # hmm doesn't seem to show up
-        #with open('test.txt', 'w') as f:
-        #    f.write('Im alive!')
 
         x_lim = init_state.x_lim
         y_lim = init_state.y_lim

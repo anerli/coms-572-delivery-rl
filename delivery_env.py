@@ -19,6 +19,7 @@ class DeliveryEnv(gym.Env):
         # https://stackoverflow.com/questions/58964267/how-to-create-an-openai-gym-observation-space-with-multiple-features
         # RLlib claims to support Tuple spaces and Dict spaces:
         # https://docs.ray.io/en/latest/rllib-models.html#variable-length-complex-observation-spaces
+        '''
         self.observation_space = Dict({
             # Player coordinate
             'player': Box(
@@ -45,6 +46,9 @@ class DeliveryEnv(gym.Env):
                 dtype=dtype
             ),
         })
+        '''
+        # TODO: Simplified observation space
+        self.observation_space = []
         
     def reset(self):
         self.state.reset()

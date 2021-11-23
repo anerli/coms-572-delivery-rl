@@ -43,6 +43,8 @@ env = DeliveryEnv(init_state)
 
 MODEL_PATH = join(ENV_DIR, args.modelname)
 
+print(f'{MODEL_PATH=}')
+
 if os.path.isfile(MODEL_PATH + '.zip'):
     print('Model exists, loading it...')
     model = DQN.load(MODEL_PATH, env=env)

@@ -42,11 +42,11 @@ class DeliveryState:
         
         # == Reward params ==
         # Reward for each package delivered
-        self.reward_delivery = 1
+        self.reward_delivery = 1000
         # Multiplier for reward gained by minimizing the distance between packages and their dropoffs.
-        self.reward_package_dest_dist_multiplier = 0#2.0
+        self.reward_package_dest_dist_multiplier = 2.0
         # Multiplier for reward gained by minimizing distance between self and packages.
-        self.reward_self_package_dist_multiplier = 0#1.0
+        self.reward_self_package_dist_multiplier = 1.0
         # Reward per step for simply holding a package
         self.reward_package_hold = 0
         # Penalty for being an idiot, like trying to go outside bounds or running into something
@@ -168,8 +168,6 @@ class DeliveryState:
         if self.occupied(pos):
             return self.idiot_penalty
 
-        reward = 0
-        '''
         # ====== Calculate package move reward ======
         # Calculate dist to closest dropoff before and after
         reward = 0
@@ -221,7 +219,6 @@ class DeliveryState:
             reward_change = improvement * self.reward_self_package_dist_multiplier
             reward += reward_change
         # ============================================
-        '''
         
 
         # Move the packages the player is carrying to where the player will be.

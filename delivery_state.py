@@ -4,6 +4,7 @@ from delivery_action import DeliveryAction
 from colors import Colors
 from utils import manhattan_dist
 import math
+from typing import List
 
 class DeliveryState:
     '''
@@ -12,25 +13,40 @@ class DeliveryState:
     dtype: data type of underlying np.arrays.
     step_lim: steps before marking as terminal.
     '''
-    def __init__(self, x_lim, y_lim, num_spawners, num_dropoffs, step_lim=60, dtype=np.uint8):
+    def __init__(self, x_lim, y_lim, init_player_pos: tuple, 
+        spawner_positions: List[tuple], dropoff_positions: List[tuple],
+        step_lim=60, dtype=np.uint8):
         self.x_lim = x_lim
         self.y_lim = y_lim
         self.dtype = dtype
         self.step_lim = step_lim
 
         #self.init_player = init_player_pos
-        self.num_spawners = num_spawners
-        self.num_dropoffs = num_dropoffs
+        #self.num_spawners = num_spawners
+        #self.num_dropoffs = num_dropoffs
+        self.init_player_pos = init_player_pos
+        #self.spawner_positions = spawners
+        #self.dropoff_positions = dropoffs
+
+        # Package Pickup Locations
+        self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+        # Package Dropoff Locations
+        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
+
+        for pos in spawner_positions:
+            self.spawners[pos] = 1
+        for pos in dropoff_positions:
+            self.dropoffs[pos] = 1
 
         self.debug = False
         
         # == Reward params ==
         # Reward for each package delivered
-        self.reward_delivery = 1000
+        self.reward_delivery = 1
         # Multiplier for reward gained by minimizing the distance between packages and their dropoffs.
-        self.reward_package_dest_dist_multiplier = 2.0
+        self.reward_package_dest_dist_multiplier = 0#2.0
         # Multiplier for reward gained by minimizing distance between self and packages.
-        self.reward_self_package_dist_multiplier = 1.0
+        self.reward_self_package_dist_multiplier = 0#1.0
         # Reward per step for simply holding a package
         self.reward_package_hold = 0
         # Penalty for being an idiot, like trying to go outside bounds or running into something
@@ -39,49 +55,54 @@ class DeliveryState:
 
         self.reset()
 
+    @classmethod
+    def from_file(cls, fpath):
+        dropoff_ch = 'd'
+        spawner_ch = 's'
+        player_ch = 'p'
+        with open(fpath, 'r') as f:
+            s = f.read()
+        lines = s.splitlines()
+
+        x_lim = None
+        y_lim = len(lines)
+
+        player_pos = None
+        spawner_positions = []
+        dropoff_positions = []
+
+        for y, line in enumerate(lines):
+            # Remove ALL whitespace
+            # Each symbol should be one character
+            line = ''.join(line.split())
+            if x_lim is None:
+                x_lim = len(line)
+            else:
+                if len(line) != x_lim:
+                    raise Exception('All rows must be the same length.')
+            
+            for x, ch in enumerate(line):
+                if ch == player_ch:
+                    if player_pos is not None:
+                        raise Exception('Multiple players not yet supported.')
+                    player_pos = (x, y)
+                elif ch == spawner_ch:
+                    spawner_positions.append((x, y))
+                elif ch == dropoff_ch:
+                    dropoff_positions.append((x, y))
+        
+        return cls(x_lim, y_lim, player_pos, spawner_positions, dropoff_positions)
+            
+
+
     def reset(self):
         # Step
         self.t = 0
         
         # Reset Player position
-        #self.player = self.init_player
+        self.player = self.init_player_pos
         # Current Package Locations, value indicates num packages.
         self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
-         # Package Pickup Locations
-        self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
-        # Package Dropoff Locations
-        self.dropoffs = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
-        
-        # Create some pickup / dropoff locations by setting some of those array values to 1.
-        # Sample without replacement:
-        space = [(x, y) for x in range(self.x_lim) for y in range(self.y_lim)]
-        
-        self.player = random.choice(space)
-        space.remove(self.player)
-
-        for _ in range(self.num_spawners):
-            pos = random.choice(space)
-            self.spawners[pos] = 1
-            space.remove(pos)
-
-        for _ in range(self.num_dropoffs):
-            pos = random.choice(space)
-            self.dropoffs[pos] = 1
-            space.remove(pos)
-
-
-        # pickup_loc = random.choice(space)
-        # space.remove(pickup_loc)
-        # self.pickups
-        # print(space)
-
-        # self.spawners[4,2] = 1
-        # self.dropoffs[1, 3] = 1
-        # self.dropoffs[0, 0] = 1
-
-    # Cumulative manhattan distance from packages to closest dropoff
-    #def calculate_cumulative_manhattan_dist_package_dest(self):
-    #    pass
 
     def to_array(self):
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
@@ -94,15 +115,11 @@ class DeliveryState:
             for x in range(self.x_lim):
                 ch = ''
                 if self.player[0] == x and self.player[1] == y:
-                    # Always end in m, semi colon separated code vals
-                    # 0m: clear
-                    # 38: set color (next args define color)
-                    # 48: set bg color
-                    ch += Colors.PLAYER#Colors.BG_BRIGHT_RED + '\u001b[38;5;232m' #Colors.BLACK
+                    ch += Colors.PLAYER
                 elif self.spawners[x, y] > 0:
-                    ch += Colors.PICKUP#Colors.BG_MAGENTA
+                    ch += Colors.PICKUP
                 elif self.dropoffs[x, y] > 0:
-                    ch += Colors.DROPOFF#Colors.BG_BLUE
+                    ch += Colors.DROPOFF
 
                 ch += str(self.packages[x, y])
                 
@@ -151,6 +168,8 @@ class DeliveryState:
         if self.occupied(pos):
             return self.idiot_penalty
 
+        reward = 0
+        '''
         # ====== Calculate package move reward ======
         # Calculate dist to closest dropoff before and after
         reward = 0
@@ -202,6 +221,7 @@ class DeliveryState:
             reward_change = improvement * self.reward_self_package_dist_multiplier
             reward += reward_change
         # ============================================
+        '''
         
 
         # Move the packages the player is carrying to where the player will be.

@@ -7,43 +7,74 @@ from tester import test
 
 import torch
 
+import os
+from os.path import join
+
 from argparse import ArgumentParser
 
-parser = ArgumentParser()
-parser.add_argument('-l', '--loadfile', type=str, required=False)
-parser.add_argument('-s', '--savefile', type=str, required=False)
-parser.add_argument('-e', '--steplimit', type=int, default=60, required=False)
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+ENVS_DIR = join(SCRIPT_DIR, 'envs')
 
+print(SCRIPT_DIR)
+
+parser = ArgumentParser()
+#parser.add_argument('-l', '--loaddir', type=str, required=False)
+#parser.add_argument('-s', '--savedir', type=str, required=False)
+parser.add_argument('-d', '--dir', type=str, required=True)
+parser.add_argument('-e', '--steplimit', type=int, default=60, required=False)
 args = parser.parse_args()
 
-init_state = DeliveryState(4, 4, 2, 1)
+ENV_DIR = join(ENVS_DIR, args.dir)
+
+if not os.path.isdir(ENV_DIR):
+    #raise Exception('Directory  does not exist.')
+    print(f'Directory {ENV_DIR} does not exist, creating it and adding a blank env.txt to be filled out.')
+    os.mkdir(ENV_DIR)
+    with open(join(ENV_DIR, 'env.txt'), 'w') as f:
+        pass
+    exit()
+
+#init_state = DeliveryState(5, 5, (0,0), [(4, 3), (0, 4)], [(4, 0)])
+init_state = DeliveryState.from_file(join(ENV_DIR, 'env.txt'))
 if args.steplimit:
     init_state.step_lim = args.steplimit
 env = DeliveryEnv(init_state)
 
-if args.loadfile:
-    model = DQN.load(args.loadfile, env=env)
+if os.path.isfile(join(ENV_DIR, 'model.zip')):
+    print('Model exists, loading it...')
+    model = DQN.load(join(ENV_DIR, 'model'), env=env)
+    #model = DQN.load('envs/5x4/model')
 else:
-    # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html?highlight=net_arch
-    policy_kwargs = dict(
-        #activation_fn=torch.nn.ReLU,
-        #net_arch=[dict(pi=[32, 32], vf=[32, 32])]
-        #net_arch=[32, 32]
-    )
-    model = DQN('MultiInputPolicy', env, verbose=1, policy_kwargs=policy_kwargs)#, learning_rate=0.1)
+    print('Model does not exist, creating it...')
+    model = DQN('MultiInputPolicy', env, verbose=1)
+
+# if args.loadfile:
+#     model = DQN.load(args.loadfile, env=env)
+# else:
+#     # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html?highlight=net_arch
+#     policy_kwargs = dict(
+#         #activation_fn=torch.nn.ReLU,
+#         #net_arch=[dict(pi=[32, 32], vf=[32, 32])]
+#         #net_arch=[32, 32]
+#     )
+#     model = DQN('MultiInputPolicy', env, verbose=1, policy_kwargs=policy_kwargs)#, learning_rate=0.1)
 
 try:
     #model.learn(total_timesteps=int(2e9))
     while True:
         # Maybe this isn't working? I think its fine?r
         model.learn(total_timesteps=int(2e5))
-        if args.savefile:
-            model.save(args.savefile)
-            print('Saved Model')
+
+        model.save(join(ENV_DIR, 'model'))
+        # if args.savefile:
+        #     model.save(args.savefile)
+        #     print('Saved Model')
 except KeyboardInterrupt:
     pass
 
-if args.savefile:
-    model.save(args.savefile)
+model.save(join(ENV_DIR, 'model'))
+
+# if args.savefile:
+#     model.save(args.savefile)
 
 test(model, env)

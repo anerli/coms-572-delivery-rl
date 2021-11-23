@@ -57,6 +57,7 @@ class DeliveryEnv(gym.Env):
     def render(self, mode='human'):
         self.state.render()
 
+'''
 def predefined_behavior_test():
     init_state = DeliveryState(5, 4)
     init_state.player = (2, 0)
@@ -91,6 +92,7 @@ def predefined_behavior_test():
         print('Resultant State:')
         env.render()
         print()
+'''
 
 def random_actions_test():
     # init_state = DeliveryState(5, 4, step_lim=10000)

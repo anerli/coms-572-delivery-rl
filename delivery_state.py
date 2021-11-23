@@ -178,17 +178,29 @@ class DeliveryState:
                 print(f'{closest_dropoff_pos_after=}')
             improvement = closest_dist_before - closest_dist_after
             reward_change = improvement * self.packages[self.player] * self.reward_package_dest_dist_multiplier
-            # Lol below was disastrous, agent exploited it by grabbing packages and moving back and forth!
-            # if improvement < 0:
-            #     # Don't penalize them so hard
-            #     reward_change *= 0.5
             reward += reward_change 
-
-            #reward += improvement * self.packages[self.player] * self.reward_package_dest_dist_multiplier
-        # May be negative, in which case our agent is penalized for moving packages
-        # away from their destinations.
-        
-        #self.packages[self.player] * self.reward_package_dest_dist_min
+        else:
+            # No packages, incentivise move toward packages
+            #self.reward_self_package_dist_multiplier
+            #closest_package_pos_before = None
+            #                     Just some finite unreachably large distance, math.inf causes issues when no packages on board
+            closest_dist_before = self.x_lim * self.y_lim # TODO: Maybe weight WRT num packages at the spot?
+            #closest_package_pos_after = None
+            closest_dist_after = self.x_lim * self.y_lim 
+            for x in range(self.x_lim):
+                for y in range(self.y_lim):
+                    if self.packages[x, y] > 0:
+                        dist_before = manhattan_dist(self.player, (x,y))
+                        if dist_before < closest_dist_before:
+                            #closest_package_pos_before = (x, y)
+                            closest_dist_before = dist_before
+                        dist_after = manhattan_dist(pos, (x,y))
+                        if dist_after < closest_dist_after:
+                            #closest_package_pos_after = (x, y)
+                            closest_dist_after = dist_after
+            improvement = closest_dist_before - closest_dist_after
+            reward_change = improvement * self.reward_self_package_dist_multiplier
+            reward += reward_change
         # ============================================
         
 

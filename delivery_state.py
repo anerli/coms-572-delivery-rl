@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from delivery_action import DeliveryAction
+from delivery_enums import PlayerDirection
 from colors import Colors
 from utils import manhattan_dist
 import math
@@ -51,7 +52,7 @@ class DeliveryState:
         self.reward_package_hold = 0
         # Penalty for being an idiot, like trying to go outside bounds or running into something
         # (penalty for making an invalid move, which results in a pass)
-        self.idiot_penalty = -5 # Consider increasing
+        self.idiot_penalty = 0 # Consider increasing
 
         self.reset()
 
@@ -110,7 +111,8 @@ class DeliveryState:
         # That way the returned array can be part of an observation space defined
         # based on what is returned here.
         #return {'player': np.array(self.player, dtype=self.dtype), 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
-        return self.packages
+        #return self.packages
+        return np.array([self.player[0], self.player[1], PlayerDirection[self.player_dir].value])
 
     def render(self):
         print('PLAYER DIRECTION:', self.player_dir)

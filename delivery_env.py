@@ -3,6 +3,7 @@ from gym.spaces import Discrete, Box, Dict
 import numpy as np
 from delivery_state import DeliveryState
 from delivery_action import DeliveryAction
+from delivery_enums import PlayerDirection
 
 class DeliveryEnv(gym.Env):
     def __init__(self, init_state: DeliveryState):
@@ -49,9 +50,15 @@ class DeliveryEnv(gym.Env):
         '''
         # All the agent really needs to know is package locations,
         # since in an unchanging environment it can learn the rest
+        # self.observation_space = Box(
+        #         low=np.zeros((x_lim, y_lim)),
+        #         high=np.full((x_lim, y_lim), 9), # Say max of 9 packages at any given location (so we can display with one char)
+        #         dtype=dtype
+        #     )
+        # Player position AND direction
         self.observation_space = Box(
-                low=np.zeros((x_lim, y_lim)),
-                high=np.full((x_lim, y_lim), 9), # Say max of 9 packages at any given location (so we can display with one char)
+                low=np.array([0, 0, 0]),
+                high=np.array([x_lim-1, y_lim-1, len(PlayerDirection)-1]),
                 dtype=dtype
             )
         

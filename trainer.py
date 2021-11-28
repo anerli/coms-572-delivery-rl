@@ -18,8 +18,6 @@ ENVS_DIR = join(SCRIPT_DIR, 'envs')
 print(SCRIPT_DIR)
 
 parser = ArgumentParser()
-#parser.add_argument('-l', '--loaddir', type=str, required=False)
-#parser.add_argument('-s', '--savedir', type=str, required=False)
 parser.add_argument('-d', '--dir', type=str, required=True)
 parser.add_argument('-m', '--modelname', type=str, required=False, default='model')
 parser.add_argument('-e', '--steplimit', type=int, default=20, required=False)
@@ -74,6 +72,7 @@ else:
 #     )
 #     model = DQN('MultiInputPolicy', env, verbose=1, policy_kwargs=policy_kwargs)#, learning_rate=0.1)
 
+# === Training ===
 if not args.test:
     try:
         #model.learn(total_timesteps=int(2e9))
@@ -89,7 +88,5 @@ if not args.test:
         pass
     model.save(MODEL_PATH)
 
-# if args.savefile:
-#     model.save(args.savefile)
-
+# === Testing ===
 test(model, env)

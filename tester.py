@@ -20,13 +20,15 @@ def test(model, env):
 
 if __name__ == '__main__':
     import sys
-    from stable_baselines3 import DQN
+    from stable_baselines3 import DQN, PPO
     from delivery_state import DeliveryState
     from delivery_env import DeliveryEnv
 
+    # FIXME: Needs updating
     init_state = DeliveryState(4, 4, 2, 1)
     env = DeliveryEnv(init_state)
 
+    
     model = DQN.load(sys.argv[1], env=env)
 
     test(model, env)

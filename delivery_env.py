@@ -109,7 +109,8 @@ def random_actions_test():
     # init_state.spawners[4, 2] = 1
     # init_state.dropoffs[1, 3] = 1
     # init_state.dropoffs[0, 0] = 1
-    init_state = DeliveryState(5, 5, 1, 2)
+    #init_state = DeliveryState(5, 5, 1, 2)
+    init_state = DeliveryState.from_file('./envs/5x4/env.txt')
     env = DeliveryEnv(init_state)
     
     done = False

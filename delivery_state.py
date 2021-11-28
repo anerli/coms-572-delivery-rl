@@ -51,7 +51,7 @@ class DeliveryState:
         self.reward_package_hold = 0
         # Penalty for being an idiot, like trying to go outside bounds or running into something
         # (penalty for making an invalid move, which results in a pass)
-        self.idiot_penalty = -0 # Consider increasing
+        self.idiot_penalty = -5 # Consider increasing
 
         self.reset()
 
@@ -101,6 +101,7 @@ class DeliveryState:
         
         # Reset Player position
         self.player = self.init_player_pos
+        self.player_dir = 'UP'
         # Current Package Locations, value indicates num packages.
         self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
 
@@ -112,6 +113,7 @@ class DeliveryState:
         return self.packages
 
     def render(self):
+        print('PLAYER DIRECTION:', self.player_dir)
         for y in range(self.y_lim):
             for x in range(self.x_lim):
                 ch = ''
@@ -262,23 +264,51 @@ class DeliveryState:
 
         # === Handle Agent Action ===
         action_name = DeliveryAction(action).name
-        arr = action_name.split('_')
-        act = arr[0]
-        direction = arr[1]
-        pos = self.direction_to_pos(direction)
+        # arr = action_name.split('_')
+        # act = arr[0]
+        # direction = arr[1]
 
-        if not self.in_bounds(pos):
-            reward += self.idiot_penalty
-        elif act == 'MOVE':
-            movement_reward = self.move(pos)
-            if self.debug: print('Reward due to movement:', movement_reward)
-            reward += movement_reward
-        elif act == 'GRAB':
-            reward += self.grab(pos)
-        elif act == 'DROP':
-            drop_reward = self.drop(pos)
-            if self.debug: print('Reward due to drop:', drop_reward)
-            reward += drop_reward
+        directions = ['UP', 'RIGHT', 'DOWN', 'LEFT']
+
+        if action_name == 'TURN_LEFT':
+            self.player_dir = directions[(directions.index(self.player_dir) + len(directions) - 1) % len(directions)]
+        elif action_name == 'TURN_RIGHT':
+            self.player_dir = directions[(directions.index(self.player_dir) + 1) % len(directions)]
+        else:
+            pos = self.direction_to_pos(self.player_dir)
+            if not self.in_bounds(pos):
+                reward += self.idiot_penalty
+            elif action_name == 'FORWARD':
+                movement_reward = self.move(pos)
+                if self.debug:
+                    print('Reward due to movement:', movement_reward)
+                reward += movement_reward
+            elif action_name == 'GRAB':
+                reward += self.grab(pos)
+            elif action_name == 'DROP':
+                drop_reward = self.drop(pos)
+                if self.debug:
+                    print('Reward due to drop:', drop_reward)
+                reward += drop_reward
+
+            
+
+        # pos = self.direction_to_pos(direction)
+
+        # FIXME
+
+        # if not self.in_bounds(pos):
+        #     reward += self.idiot_penalty
+        # elif act == 'MOVE':
+        #     movement_reward = self.move(pos)
+        #     if self.debug: print('Reward due to movement:', movement_reward)
+        #     reward += movement_reward
+        # elif act == 'GRAB':
+        #     reward += self.grab(pos)
+        # elif act == 'DROP':
+        #     drop_reward = self.drop(pos)
+        #     if self.debug: print('Reward due to drop:', drop_reward)
+        #     reward += drop_reward
         #print(act, direction)
 
         # === Misc Rewards ===

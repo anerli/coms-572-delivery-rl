@@ -108,7 +108,8 @@ class DeliveryState:
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
         # That way the returned array can be part of an observation space defined
         # based on what is returned here.
-        return {'player': np.array(self.player, dtype=self.dtype), 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
+        #return {'player': np.array(self.player, dtype=self.dtype), 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
+        return self.packages
 
     def render(self):
         for y in range(self.y_lim):

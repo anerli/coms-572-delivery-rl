@@ -51,7 +51,7 @@ if os.path.isfile(MODEL_PATH + '.zip'):
     #model = DQN.load('envs/5x4/model')
 else:
     print('Model does not exist, creating it...')
-    model = DQN('MultiInputPolicy', env, verbose=1)#, learning_rate=0.01)
+    model = DQN('MlpPolicy', env, verbose=1)#, learning_rate=0.01)
 
 # if args.loadfile:
 #     model = DQN.load(args.loadfile, env=env)

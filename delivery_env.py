@@ -47,8 +47,13 @@ class DeliveryEnv(gym.Env):
             ),
         })
         '''
-        # TODO: Simplified observation space
-        self.observation_space = []
+        # All the agent really needs to know is package locations,
+        # since in an unchanging environment it can learn the rest
+        self.observation_space = Box(
+                low=np.zeros((x_lim, y_lim)),
+                high=np.full((x_lim, y_lim), 9), # Say max of 9 packages at any given location (so we can display with one char)
+                dtype=dtype
+            )
         
     def reset(self):
         self.state.reset()

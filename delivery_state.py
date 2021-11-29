@@ -1,7 +1,6 @@
 import numpy as np
 import random
 from delivery_action import DeliveryAction
-from delivery_enums import PlayerDirection
 from colors import Colors
 from utils import manhattan_dist
 import math
@@ -22,12 +21,7 @@ class DeliveryState:
         self.dtype = dtype
         self.step_lim = step_lim
 
-        #self.init_player = init_player_pos
-        #self.num_spawners = num_spawners
-        #self.num_dropoffs = num_dropoffs
         self.init_player_pos = init_player_pos
-        #self.spawner_positions = spawners
-        #self.dropoff_positions = dropoffs
 
         # Package Pickup Locations
         self.spawners = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
@@ -111,11 +105,8 @@ class DeliveryState:
         # That way the returned array can be part of an observation space defined
         # based on what is returned here.
         return {'player': np.array(self.player, dtype=self.dtype), 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
-        #return self.packages
-        #return np.array([self.player[0], self.player[1]], dtype=self.dtype)#, PlayerDirection[self.player_dir].value])
 
     def render(self):
-        #print('PLAYER DIRECTION:', self.player_dir)
         for y in range(self.y_lim):
             for x in range(self.x_lim):
                 ch = ''
@@ -132,13 +123,9 @@ class DeliveryState:
 
                 print(ch, end='')
                 if x < self.x_lim - 1:
-                    #print(' | ', end='')
                     print(end=' ')
             print()
-            # if y < self.y_lim - 1:
-            #     print('\n' + '-'*self.x_lim*3)
-            # else:
-            #     print()
+
 
     @classmethod
     def direction_to_vec(cls, direction_str):
@@ -203,11 +190,8 @@ class DeliveryState:
             reward += reward_change 
         else:
             # No packages, incentivise move toward packages
-            #self.reward_self_package_dist_multiplier
-            #closest_package_pos_before = None
             #                     Just some finite unreachably large distance, math.inf causes issues when no packages on board
-            closest_dist_before = self.x_lim * self.y_lim # TODO: Maybe weight WRT num packages at the spot?
-            #closest_package_pos_after = None
+            closest_dist_before = self.x_lim * self.y_lim
             closest_dist_after = self.x_lim * self.y_lim 
             for x in range(self.x_lim):
                 for y in range(self.y_lim):
@@ -224,7 +208,6 @@ class DeliveryState:
             reward_change = improvement * self.reward_self_package_dist_multiplier
             reward += reward_change
         # ============================================
-        
 
         # Move the packages the player is carrying to where the player will be.
         self.move_packages(self.player, pos)
@@ -258,25 +241,10 @@ class DeliveryState:
         
 
     def step(self, action):
-        # DEBUG
-        # Log action
-        #print(DeliveryAction(action).name)
-
         reward = 0.0
 
         # === Handle Agent Action ===
         action_name = DeliveryAction(action).name
-        # arr = action_name.split('_')
-        # act = arr[0]
-        # direction = arr[1]
-
-        
-
-        # if action_name == 'TURN_LEFT':
-        #     self.player_dir = directions[(directions.index(self.player_dir) + len(directions) - 1) % len(directions)]
-        # elif action_name == 'TURN_RIGHT':
-        #     self.player_dir = directions[(directions.index(self.player_dir) + 1) % len(directions)]
-        # else:
 
         directions = ['UP', 'RIGHT', 'DOWN', 'LEFT']
         if action_name == 'GRAB':
@@ -295,7 +263,6 @@ class DeliveryState:
                 reward += self.grab(best_pos)
         elif action_name == 'DROP':
             # Drop at dropoff or at available location. o.w. drop to the left
-            #best_pos = self.direction_to_pos('DOWN')
             best_pos = None
             for direction in directions:
                 pos = self.direction_to_pos(direction)
@@ -319,34 +286,10 @@ class DeliveryState:
                     print('Reward due to movement:', movement_reward)
                 reward += movement_reward
 
-
-            
-
-        # pos = self.direction_to_pos(direction)
-
-        # FIXME
-
-        # if not self.in_bounds(pos):
-        #     reward += self.idiot_penalty
-        # elif act == 'MOVE':
-        #     movement_reward = self.move(pos)
-        #     if self.debug: print('Reward due to movement:', movement_reward)
-        #     reward += movement_reward
-        # elif act == 'GRAB':
-        #     reward += self.grab(pos)
-        # elif act == 'DROP':
-        #     drop_reward = self.drop(pos)
-        #     if self.debug: print('Reward due to drop:', drop_reward)
-        #     reward += drop_reward
-        #print(act, direction)
-
         # === Misc Rewards ===
         package_hold_reward = self.reward_package_hold * self.packages[self.player]
         if self.debug: print('Reward due to holding packages:', package_hold_reward)
         reward += package_hold_reward
-
-        # Reward for existing, to make sure everything is working properly
-        #reward += 1
 
         # === Spawn Packages ===
         # This could go before or after player action,
@@ -366,12 +309,5 @@ class DeliveryState:
         self.t += 1
         done = self.t >= self.step_lim
         info = {}
-
-        # DEBUG
-        # print('Action:', DeliveryAction(action).name)
-        # print('Reward:', reward)
-        # print('Resultant State:')
-        # self.render()
-        # print()
 
         return obs, reward, done, info

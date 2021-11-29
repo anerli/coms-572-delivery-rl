@@ -1,15 +1,9 @@
 from stable_baselines3 import DQN, PPO
-
 from delivery_state import DeliveryState
 from delivery_env import DeliveryEnv
-
 from tester import test
-
-import torch
-
 import os
 from os.path import join
-
 from argparse import ArgumentParser
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -55,35 +49,17 @@ else:
 if os.path.isfile(MODEL_PATH + '.zip'):
     print('Model exists, loading it...')
     model = ModelClass.load(MODEL_PATH, env=env)
-
     #model = DQN.load('envs/5x4/model')
 else:
     print('Model does not exist, creating it...')
     model = ModelClass('MultiInputPolicy', env, verbose=1)#, learning_rate=0.01)
 
-# if args.loadfile:
-#     model = DQN.load(args.loadfile, env=env)
-# else:
-#     # https://stable-baselines3.readthedocs.io/en/master/guide/custom_policy.html?highlight=net_arch
-#     policy_kwargs = dict(
-#         #activation_fn=torch.nn.ReLU,
-#         #net_arch=[dict(pi=[32, 32], vf=[32, 32])]
-#         #net_arch=[32, 32]
-#     )
-#     model = DQN('MultiInputPolicy', env, verbose=1, policy_kwargs=policy_kwargs)#, learning_rate=0.1)
-
 # === Training ===
 if not args.test:
     try:
-        #model.learn(total_timesteps=int(2e9))
         while True:
-            # Maybe this isn't working? I think its fine?r
             model.learn(total_timesteps=int(2e5))
-
             model.save(MODEL_PATH)
-            # if args.savefile:
-            #     model.save(args.savefile)
-            #     print('Saved Model')
     except KeyboardInterrupt:
         pass
     model.save(MODEL_PATH)

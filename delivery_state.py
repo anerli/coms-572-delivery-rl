@@ -52,7 +52,7 @@ class DeliveryState:
         self.reward_package_hold = 0
         # Penalty for being an idiot, like trying to go outside bounds or running into something
         # (penalty for making an invalid move, which results in a pass)
-        self.idiot_penalty = 0 # Consider increasing
+        self.idiot_penalty = -5 # Consider increasing
 
         self.reset()
 

@@ -102,7 +102,7 @@ class DeliveryState:
         
         # Reset Player position
         self.player = self.init_player_pos
-        self.player_dir = 'UP'
+        #self.player_dir = 'UP'
         # Current Package Locations, value indicates num packages.
         self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
 
@@ -112,10 +112,10 @@ class DeliveryState:
         # based on what is returned here.
         #return {'player': np.array(self.player, dtype=self.dtype), 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
         #return self.packages
-        return np.array([self.player[0], self.player[1], PlayerDirection[self.player_dir].value])
+        return np.array([self.player[0], self.player[1]], dtype=self.dtype)#, PlayerDirection[self.player_dir].value])
 
     def render(self):
-        print('PLAYER DIRECTION:', self.player_dir)
+        #print('PLAYER DIRECTION:', self.player_dir)
         for y in range(self.y_lim):
             for x in range(self.x_lim):
                 ch = ''
@@ -270,28 +270,55 @@ class DeliveryState:
         # act = arr[0]
         # direction = arr[1]
 
-        directions = ['UP', 'RIGHT', 'DOWN', 'LEFT']
+        
 
-        if action_name == 'TURN_LEFT':
-            self.player_dir = directions[(directions.index(self.player_dir) + len(directions) - 1) % len(directions)]
-        elif action_name == 'TURN_RIGHT':
-            self.player_dir = directions[(directions.index(self.player_dir) + 1) % len(directions)]
+        # if action_name == 'TURN_LEFT':
+        #     self.player_dir = directions[(directions.index(self.player_dir) + len(directions) - 1) % len(directions)]
+        # elif action_name == 'TURN_RIGHT':
+        #     self.player_dir = directions[(directions.index(self.player_dir) + 1) % len(directions)]
+        # else:
+
+        directions = ['UP', 'RIGHT', 'DOWN', 'LEFT']
+        if action_name == 'GRAB':
+            # Grab at pos with most packages
+            best_pos = None
+            most = 0
+            for direction in directions:
+                pos = self.direction_to_pos(direction)
+                if self.in_bounds(pos) and (best_pos is None or self.packages[pos] >= most):
+                        most = self.packages[pos]
+                        best_pos = pos
+            if not self.in_bounds(best_pos):
+                # In case somehow we are surrounded by invalid positions
+                reward += self.idiot_penalty
+            else:
+                reward += self.grab(best_pos)
+        elif action_name == 'DROP':
+            # Drop at dropoff or at available location. o.w. drop to the left
+            #best_pos = self.direction_to_pos('DOWN')
+            best_pos = None
+            for direction in directions:
+                pos = self.direction_to_pos(direction)
+                if self.in_bounds(pos) and (best_pos is None or self.dropoffs[pos] > 0):
+                    best_pos = pos
+            if not self.in_bounds(best_pos):
+                # In case somehow we are surrounded by invalid positions
+                drop_reward = self.idiot_penalty
+            else:
+                drop_reward = self.drop(best_pos)
+            if self.debug:
+                print('Reward due to drop:', drop_reward)
+            reward += drop_reward
         else:
-            pos = self.direction_to_pos(self.player_dir)
+            pos = self.direction_to_pos(action_name)
             if not self.in_bounds(pos):
                 reward += self.idiot_penalty
-            elif action_name == 'FORWARD':
+            else:
                 movement_reward = self.move(pos)
                 if self.debug:
                     print('Reward due to movement:', movement_reward)
                 reward += movement_reward
-            elif action_name == 'GRAB':
-                reward += self.grab(pos)
-            elif action_name == 'DROP':
-                drop_reward = self.drop(pos)
-                if self.debug:
-                    print('Reward due to drop:', drop_reward)
-                reward += drop_reward
+
 
             
 

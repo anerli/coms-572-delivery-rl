@@ -57,8 +57,8 @@ class DeliveryEnv(gym.Env):
         #     )
         # Player position AND direction
         self.observation_space = Box(
-                low=np.array([0, 0, 0]),
-                high=np.array([x_lim-1, y_lim-1, len(PlayerDirection)-1]),
+                low=np.array([0, 0]),
+                high=np.array([x_lim-1, y_lim-1]),
                 dtype=dtype
             )
         

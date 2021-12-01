@@ -16,6 +16,7 @@ parser.add_argument('-d', '--dir', type=str, required=True)
 parser.add_argument('-m', '--modelname', type=str, required=False, default='model')
 parser.add_argument('-e', '--steplimit', type=int, default=20, required=False)
 parser.add_argument('-a', '--algorithm', type=str, required=False, default='dqn')
+parser.add_argument('-s', '--steps', type=float, required=False) # Total Training Steps
 parser.add_argument('-t', '--test', action='store_true')
 args = parser.parse_args()
 
@@ -56,12 +57,22 @@ else:
 
 # === Training ===
 if not args.test:
-    try:
-        while True:
-            model.learn(total_timesteps=int(2e5))
-            model.save(MODEL_PATH)
-    except KeyboardInterrupt:
-        pass
+    if args.steps is None:
+        # One issue with this:
+        # Will have best performance towards END of training period since less exploration
+        # (see exploration_fraction, exploration_initial_eps, exploration_final_eps params for DQN)
+        # https://stable-baselines3.readthedocs.io/en/master/_modules/stable_baselines3/dqn/dqn.html?highlight=exploration_fraction
+        try:
+            while True:
+                model.learn(total_timesteps=int(2e5))
+                model.save(MODEL_PATH)
+        except KeyboardInterrupt:
+            pass
+    else:
+        try:
+            model.learn(total_timesteps=int(args.steps))
+        except KeyboardInterrupt:
+            pass
     model.save(MODEL_PATH)
 
 # === Testing ===

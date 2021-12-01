@@ -21,6 +21,8 @@ class DeliveryState:
         self.dtype = dtype
         self.step_lim = step_lim
 
+        self.carry_lim = 3
+
         #self.init_player_pos = init_player_pos
         self.initial_player_positions = initial_player_positions
 
@@ -173,9 +175,14 @@ class DeliveryState:
         # Player blocked by drop offs, spawners, and any stray packages
         return self.dropoffs[pos] > 0 or self.spawners[pos] > 0 or self.packages[pos] > 0
 
-    def move_packages(self, from_pos, to_pos):
-        self.packages[to_pos] = self.packages[from_pos]
-        self.packages[from_pos] = 0
+    def move_packages(self, from_pos, to_pos, lim=None):
+        if lim:
+            transfer_amt = min(lim, self.packages[from_pos])
+            self.packages[to_pos] += transfer_amt
+            self.packages[from_pos] -= transfer_amt
+        else:
+            self.packages[to_pos] = self.packages[from_pos]
+            self.packages[from_pos] = 0
 
     def move(self, player_idx,  pos):
         if self.occupied(pos):
@@ -231,7 +238,7 @@ class DeliveryState:
         # ============================================
 
         # Move the packages the player is carrying to where the player will be.
-        self.move_packages(tuple(self.players[player_idx]), pos)
+        self.move_packages(tuple(self.players[player_idx]), pos, self.carry_lim)
 
         # Move the player
         #tuple(self.players[player_idx]) = pos
@@ -243,7 +250,7 @@ class DeliveryState:
     def grab(self, player_idx,  pos):
         if self.packages[pos] == 0:
             return self.idiot_penalty
-        self.move_packages(pos, tuple(self.players[player_idx]))
+        self.move_packages(pos, tuple(self.players[player_idx]), self.carry_lim)
         return 0
 
     '''

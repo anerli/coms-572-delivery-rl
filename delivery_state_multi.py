@@ -1,6 +1,6 @@
 import numpy as np
 import random
-from delivery_action import DeliveryAction
+from delivery_action_multi import SingleDeliveryAction, get_actions
 from colors import Colors
 from utils import manhattan_dist
 import math
@@ -102,7 +102,10 @@ class DeliveryState:
         
         # Reset Player position
         #self.player = self.init_player_pos
-        self.players = np.array(shape=(self.num_players, 2), dtype=self.dtype)
+        self.players = np.zeros(shape=(self.num_players, 2), dtype=self.dtype)
+        for i, pos in enumerate(self.initial_player_positions):
+            self.players[i][0] = pos[0]
+            self.players[i][1] = pos[1]
         #self.player_dir = 'UP'
         # Current Package Locations, value indicates num packages.
         self.packages = np.zeros(shape=(self.x_lim, self.y_lim), dtype=self.dtype)
@@ -111,13 +114,18 @@ class DeliveryState:
         # Need to convert self to tuple of np.arrays (dtype np.int8) and python ints
         # That way the returned array can be part of an observation space defined
         # based on what is returned here.
-        return {'players': np.array(self.player, dtype=self.dtype), 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
+        return {'players': self.players, 'spawners': self.spawners, 'packages': self.packages, 'dropoffs': self.dropoffs}
 
     def render(self):
         for y in range(self.y_lim):
             for x in range(self.x_lim):
                 ch = ''
-                if self.player[0] == x and self.player[1] == y:
+                #if self.player[0] == x and self.player[1] == y:
+                is_player = False
+                for i in range(self.num_players):
+                    if tuple(self.players[i]) == (x, y):
+                        is_player = True
+                if is_player:
                     ch += Colors.PLAYER
                 elif self.spawners[x, y] > 0:
                     ch += Colors.PICKUP
@@ -146,9 +154,9 @@ class DeliveryState:
             return (-1, 0)
 
     # Convert direction relative to the player to coordinates
-    def direction_to_pos(self, direction_str):
+    def direction_to_pos(self, player_idx,  direction_str):
         vec = DeliveryState.direction_to_vec(direction_str)
-        return (self.player[0]+vec[0], self.player[1]+vec[1])
+        return (tuple(self.players[player_idx])[0]+vec[0], tuple(self.players[player_idx])[1]+vec[1])
 
     def in_bounds(self, pos):
         return (0 <= pos[0] < self.x_lim) and (0 <= pos[1] < self.y_lim)
@@ -156,6 +164,10 @@ class DeliveryState:
     def occupied(self, pos):
         # Apparently can pass a tuple to np indexer
         # equivalent to [pos[0], pos[1]]
+
+        for i in range(self.num_players):
+            if tuple(self.players[i]) == pos:
+                return True
         # Player blocked by drop offs, spawners, and any stray packages
         return self.dropoffs[pos] > 0 or self.spawners[pos] > 0 or self.packages[pos] > 0
 
@@ -163,14 +175,14 @@ class DeliveryState:
         self.packages[to_pos] = self.packages[from_pos]
         self.packages[from_pos] = 0
 
-    def move(self, pos):
+    def move(self, player_idx,  pos):
         if self.occupied(pos):
             return self.idiot_penalty
 
         # ====== Calculate package move reward ======
         # Calculate dist to closest dropoff before and after
         reward = 0
-        if self.packages[self.player] > 0:
+        if self.packages[tuple(self.players[player_idx])] > 0:
             closest_dropoff_pos_before = None
             closest_dist_before = math.inf
             closest_dropoff_pos_after = None
@@ -178,7 +190,7 @@ class DeliveryState:
             for x in range(self.x_lim):
                 for y in range(self.y_lim):
                     if self.dropoffs[x, y] > 0:
-                        dist_before = manhattan_dist(self.player, (x,y))
+                        dist_before = manhattan_dist(tuple(self.players[player_idx]), (x,y))
                         if dist_before < closest_dist_before:
                             closest_dropoff_pos_before = (x, y)
                             closest_dist_before = dist_before
@@ -193,7 +205,7 @@ class DeliveryState:
                 print(f'{closest_dist_after=}')
                 print(f'{closest_dropoff_pos_after=}')
             improvement = closest_dist_before - closest_dist_after
-            reward_change = improvement * self.packages[self.player] * self.reward_package_dest_dist_multiplier
+            reward_change = improvement * self.packages[tuple(self.players[player_idx])] * self.reward_package_dest_dist_multiplier
             reward += reward_change 
         else:
             # No packages, incentivise move toward packages
@@ -203,7 +215,7 @@ class DeliveryState:
             for x in range(self.x_lim):
                 for y in range(self.y_lim):
                     if self.packages[x, y] > 0:
-                        dist_before = manhattan_dist(self.player, (x,y))
+                        dist_before = manhattan_dist(tuple(self.players[player_idx]), (x,y))
                         if dist_before < closest_dist_before:
                             #closest_package_pos_before = (x, y)
                             closest_dist_before = dist_before
@@ -217,49 +229,51 @@ class DeliveryState:
         # ============================================
 
         # Move the packages the player is carrying to where the player will be.
-        self.move_packages(self.player, pos)
+        self.move_packages(tuple(self.players[player_idx]), pos)
 
         # Move the player
-        self.player = pos
+        #tuple(self.players[player_idx]) = pos
+        self.players[player_idx][0] = pos[0]
+        self.players[player_idx][1] = pos[1]
 
         return reward
 
-    def grab(self, pos):
+    def grab(self, player_idx,  pos):
         if self.packages[pos] == 0:
             return self.idiot_penalty
-        self.move_packages(pos, self.player)
+        self.move_packages(pos, tuple(self.players[player_idx]))
         return 0
 
     '''
     Do drop action and return any reward gained from depositing at a dropoff.
     '''
-    def drop(self, pos):
-        if self.packages[self.player] == 0:
+    def drop(self, player_idx,  pos):
+        if self.packages[tuple(self.players[player_idx])] == 0:
             return self.idiot_penalty
 
         packages_deposited = 0
-        self.move_packages(self.player, pos)
+        self.move_packages(tuple(self.players[player_idx]), pos)
         if self.dropoffs[pos] > 0:
             packages_deposited += self.packages[pos]
             # Clear packages to "deposit" them.
             self.packages[pos] = 0
         # Reward
         return packages_deposited * self.reward_delivery
-        
-
-    def step(self, action):
+    
+    def step_player(self, player_idx, player_action):
         reward = 0.0
 
         # === Handle Agent Action ===
-        action_name = DeliveryAction(action).name
+        action_name = SingleDeliveryAction(player_action).name
 
+        # TODO: Fix below for multi
         directions = ['UP', 'RIGHT', 'DOWN', 'LEFT']
         if action_name == 'GRAB':
             # Grab at pos with most packages
             best_pos = None
             most = 0
             for direction in directions:
-                pos = self.direction_to_pos(direction)
+                pos = self.direction_to_pos(player_idx, direction)
                 if self.in_bounds(pos) and (best_pos is None or self.packages[pos] >= most):
                         most = self.packages[pos]
                         best_pos = pos
@@ -267,34 +281,34 @@ class DeliveryState:
                 # In case somehow we are surrounded by invalid positions
                 reward += self.idiot_penalty
             else:
-                reward += self.grab(best_pos)
+                reward += self.grab(player_idx, best_pos)
         elif action_name == 'DROP':
             # Drop at dropoff or at available location. o.w. drop to the left
             best_pos = None
             for direction in directions:
-                pos = self.direction_to_pos(direction)
+                pos = self.direction_to_pos(player_idx, direction)
                 if self.in_bounds(pos) and (best_pos is None or self.dropoffs[pos] > 0):
                     best_pos = pos
             if not self.in_bounds(best_pos):
                 # In case somehow we are surrounded by invalid positions
                 drop_reward = self.idiot_penalty
             else:
-                drop_reward = self.drop(best_pos)
+                drop_reward = self.drop(player_idx, best_pos)
             if self.debug:
                 print('Reward due to drop:', drop_reward)
             reward += drop_reward
         else:
-            pos = self.direction_to_pos(action_name)
+            pos = self.direction_to_pos(player_idx, action_name)
             if not self.in_bounds(pos):
                 reward += self.idiot_penalty
             else:
-                movement_reward = self.move(pos)
+                movement_reward = self.move(player_idx, pos)
                 if self.debug:
                     print('Reward due to movement:', movement_reward)
                 reward += movement_reward
 
         # === Misc Rewards ===
-        package_hold_reward = self.reward_package_hold * self.packages[self.player]
+        package_hold_reward = self.reward_package_hold * self.packages[tuple(self.players[player_idx])]
         if self.debug: print('Reward due to holding packages:', package_hold_reward)
         reward += package_hold_reward
 
@@ -308,6 +322,17 @@ class DeliveryState:
                 if self.spawners[x, y] > 0 and self.packages[x,y] < 9:
                     if random.random() < package_spawn_chance:
                         self.packages[x,y] += 1
+
+        return reward
+
+
+    def step(self, action):
+        reward = 0.0
+
+        player_actions = get_actions(action, self.num_players)
+
+        for player_idx in range(self.num_players):
+            reward += self.step_player(player_idx, player_actions[player_idx])
 
 
         # === Return ===

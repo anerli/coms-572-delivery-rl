@@ -55,7 +55,8 @@ if os.path.isfile(MODEL_PATH + '.zip'):
     #model = DQN.load('envs/5x4/model')
 else:
     print('Model does not exist, creating it...')
-    model = ModelClass('MultiInputPolicy', env, verbose=1)#, learning_rate=0.01)
+    # Using log: tensorboard --logdir <path>
+    model = ModelClass('MultiInputPolicy', env, verbose=1, tensorboard_log=MODEL_PATH+"_tensorboard")#, learning_rate=0.01)
 
 # === Training ===
 if not args.test:

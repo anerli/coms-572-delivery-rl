@@ -61,14 +61,16 @@ class DeliveryState:
         lines = s.splitlines()
 
         x_lim = None
-        y_lim = len(lines)
+        y_lim = len(lines) - 1
 
         #player_pos = None
         player_positions = []
         spawner_positions = []
         dropoff_positions = []
 
-        for y, line in enumerate(lines):
+        step_lim = int(lines[0])
+
+        for y, line in enumerate(lines[1:]):
             # Remove ALL whitespace
             # Each symbol should be one character
             line = ''.join(line.split())
@@ -89,7 +91,7 @@ class DeliveryState:
                 elif ch == dropoff_ch:
                     dropoff_positions.append((x, y))
         
-        return cls(x_lim, y_lim, player_positions, spawner_positions, dropoff_positions)
+        return cls(x_lim, y_lim, player_positions, spawner_positions, dropoff_positions, step_lim)
 
     @property
     def num_players(self):

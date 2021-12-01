@@ -14,7 +14,7 @@ print(SCRIPT_DIR)
 parser = ArgumentParser()
 parser.add_argument('-d', '--dir', type=str, required=True)
 parser.add_argument('-m', '--modelname', type=str, required=False, default='model')
-parser.add_argument('-e', '--steplimit', type=int, default=20, required=False)
+parser.add_argument('-e', '--steplimit', type=int, required=False)
 parser.add_argument('-a', '--algorithm', type=str, required=False, default='dqn')
 parser.add_argument('-s', '--steps', type=float, required=False) # Total Training Steps
 parser.add_argument('-t', '--test', action='store_true')
@@ -32,7 +32,9 @@ if not os.path.isdir(ENV_DIR):
 
 #init_state = DeliveryState(5, 5, (0,0), [(4, 3), (0, 4)], [(4, 0)])
 init_state = DeliveryState.from_file(join(ENV_DIR, 'env.txt'))
-if args.steplimit:
+
+# Step limit override
+if args.steplimit is not None:
     init_state.step_lim = args.steplimit
 env = DeliveryEnv(init_state)
 

@@ -1,7 +1,7 @@
 from stable_baselines3 import DQN, PPO
 from delivery_state_multi import DeliveryState
 from delivery_env_multi import DeliveryEnv
-from tester import test
+from tester_multi import test
 import os
 from os.path import join
 from argparse import ArgumentParser

@@ -177,6 +177,7 @@ class DeliveryState:
 
     def move_packages(self, from_pos, to_pos, lim=None):
         if lim:
+            lim = max(0, lim)
             transfer_amt = min(lim, self.packages[from_pos])
             self.packages[to_pos] += transfer_amt
             self.packages[from_pos] -= transfer_amt
@@ -250,7 +251,9 @@ class DeliveryState:
     def grab(self, player_idx,  pos):
         if self.packages[pos] == 0:
             return self.idiot_penalty
-        self.move_packages(pos, tuple(self.players[player_idx]), self.carry_lim)
+        
+        lim = self.carry_lim - self.packages[tuple(self.players[player_idx])]
+        self.move_packages(pos, tuple(self.players[player_idx]), lim)
         return 0
 
     '''
@@ -261,7 +264,20 @@ class DeliveryState:
             return self.idiot_penalty
 
         packages_deposited = 0
-        self.move_packages(tuple(self.players[player_idx]), pos)
+        # Don't need to use carry limit here probably? Let's say players can drop more than they can carry
+        #lim = self.carry_lim - self.packages[tuple(self.players[player_idx])]
+        # Check if there is a player at pos and if so make sure recieving player isn't carrying too much
+        is_player = False
+        for i in range(self.num_players):
+            if tuple(self.players[i]) == pos:
+                is_player = True
+                break
+        if is_player:
+            recieving_player_packages = self.packages[pos]
+            lim = self.carry_lim - recieving_player_packages#min(self.carry_lim, recieving_player_packages)
+        else:
+            lim = self.carry_lim
+        self.move_packages(tuple(self.players[player_idx]), pos, lim)
         if self.dropoffs[pos] > 0:
             packages_deposited += self.packages[pos]
             # Clear packages to "deposit" them.

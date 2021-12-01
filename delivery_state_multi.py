@@ -255,7 +255,7 @@ class DeliveryState:
             return self.idiot_penalty
         
         lim = self.carry_lim - self.packages[tuple(self.players[player_idx])]
-        #lim = min(lim, self.max_packages - self.self.packages[pos])
+        #lim = min(lim, self.package_max - self.self.packages[pos])
         self.move_packages(pos, tuple(self.players[player_idx]), lim)
         return 0
 
@@ -280,7 +280,7 @@ class DeliveryState:
             lim = self.carry_lim - recieving_player_packages#min(self.carry_lim, recieving_player_packages)
         else:
             lim = self.carry_lim
-        lim = min(lim, self.max_packages - self.self.packages[pos])
+        lim = min(lim, self.package_max - self.self.packages[pos])
         self.move_packages(tuple(self.players[player_idx]), pos, lim)
         if self.dropoffs[pos] > 0:
             packages_deposited += self.packages[pos]

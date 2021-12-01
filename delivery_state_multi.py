@@ -22,6 +22,8 @@ class DeliveryState:
         self.step_lim = step_lim
 
         self.carry_lim = 3
+        # Max packages at any position
+        self.package_max = 9
 
         #self.init_player_pos = init_player_pos
         self.initial_player_positions = initial_player_positions
@@ -176,7 +178,7 @@ class DeliveryState:
         return self.dropoffs[pos] > 0 or self.spawners[pos] > 0 or self.packages[pos] > 0
 
     def move_packages(self, from_pos, to_pos, lim=None):
-        if lim:
+        if lim is not None:
             lim = max(0, lim)
             transfer_amt = min(lim, self.packages[from_pos])
             self.packages[to_pos] += transfer_amt
@@ -253,6 +255,7 @@ class DeliveryState:
             return self.idiot_penalty
         
         lim = self.carry_lim - self.packages[tuple(self.players[player_idx])]
+        #lim = min(lim, self.max_packages - self.self.packages[pos])
         self.move_packages(pos, tuple(self.players[player_idx]), lim)
         return 0
 
@@ -277,6 +280,7 @@ class DeliveryState:
             lim = self.carry_lim - recieving_player_packages#min(self.carry_lim, recieving_player_packages)
         else:
             lim = self.carry_lim
+        lim = min(lim, self.max_packages - self.self.packages[pos])
         self.move_packages(tuple(self.players[player_idx]), pos, lim)
         if self.dropoffs[pos] > 0:
             packages_deposited += self.packages[pos]

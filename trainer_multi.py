@@ -2,6 +2,7 @@ from stable_baselines3 import DQN, PPO
 from delivery_state_multi import DeliveryState
 from delivery_env_multi import DeliveryEnv
 from tester_multi import test
+from package_callback import DeliveredPackagesLogger
 import os
 from os.path import join
 from argparse import ArgumentParser
@@ -69,13 +70,13 @@ if not args.test:
         # https://stable-baselines3.readthedocs.io/en/master/_modules/stable_baselines3/dqn/dqn.html?highlight=exploration_fraction
         try:
             while True:
-                model.learn(total_timesteps=int(2e5))
+                model.learn(total_timesteps=int(2e5), callback=DeliveredPackagesLogger())
                 model.save(MODEL_PATH)
         except KeyboardInterrupt:
             pass
     else:
         try:
-            model.learn(total_timesteps=int(args.steps))
+            model.learn(total_timesteps=int(args.steps), callback=DeliveredPackagesLogger())
         except KeyboardInterrupt:
             pass
     model.save(MODEL_PATH)

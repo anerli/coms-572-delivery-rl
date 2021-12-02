@@ -105,6 +105,9 @@ class DeliveryState:
     def reset(self):
         # Step
         self.t = 0
+
+        # For logging
+        self.packages_delivered = 0
         
         # Reset Player position
         #self.player = self.init_player_pos
@@ -286,6 +289,9 @@ class DeliveryState:
             packages_deposited += self.packages[pos]
             # Clear packages to "deposit" them.
             self.packages[pos] = 0
+
+        self.packages_delivered += packages_deposited
+        #print(self.packages_delivered)
         # Reward
         return packages_deposited * self.reward_delivery
     

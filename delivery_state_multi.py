@@ -44,9 +44,9 @@ class DeliveryState:
         # Reward for each package delivered
         self.reward_delivery = 1000
         # Multiplier for reward gained by minimizing the distance between packages and their dropoffs.
-        self.reward_package_dest_dist_multiplier = 2.0
+        self.reward_package_dest_dist_multiplier = 0.0#2.0
         # Multiplier for reward gained by minimizing distance between self and packages.
-        self.reward_self_package_dist_multiplier = 1.0
+        self.reward_self_package_dist_multiplier = 0.0#1.0
         # Reward per step for simply holding a package
         self.reward_package_hold = 0
         # Penalty for being an idiot, like trying to go outside bounds or running into something
@@ -197,7 +197,7 @@ class DeliveryState:
         # ====== Calculate package move reward ======
         # Calculate dist to closest dropoff before and after
         reward = 0
-        if self.packages[tuple(self.players[player_idx])] > 0:
+        if self.reward_package_dest_dist_multiplier > 0 and self.packages[tuple(self.players[player_idx])] > 0:
             closest_dropoff_pos_before = None
             closest_dist_before = math.inf
             closest_dropoff_pos_after = None
@@ -222,7 +222,7 @@ class DeliveryState:
             improvement = closest_dist_before - closest_dist_after
             reward_change = improvement * self.packages[tuple(self.players[player_idx])] * self.reward_package_dest_dist_multiplier
             reward += reward_change 
-        else:
+        elif self.reward_self_package_dist_multiplier > 0:
             # No packages, incentivise move toward packages
             #                     Just some finite unreachably large distance, math.inf causes issues when no packages on board
             closest_dist_before = self.x_lim * self.y_lim

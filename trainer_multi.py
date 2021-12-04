@@ -57,7 +57,7 @@ if os.path.isfile(MODEL_PATH + '.zip'):
 else:
     print('Model does not exist, creating it...')
     # Using log: tensorboard --logdir <path>
-    model = ModelClass('MultiInputPolicy', env, verbose=1, tensorboard_log=MODEL_PATH+"_tensorboard")
+    model = ModelClass('MultiInputPolicy', env, verbose=1, tensorboard_log=MODEL_PATH+"_tensorboard")#, exploration_final_eps=0.50)
         #exploration_fraction=0.75, exploration_initial_eps=1, exploration_final_eps=0.01)
         # TODO: Make these ^ better
 
